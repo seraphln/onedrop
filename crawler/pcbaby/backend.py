@@ -1,0 +1,77 @@
+# coding=utf8
+#
+
+
+"""
+太平洋亲子网的爬虫实现
+
+目前将爬虫分为如下几个部分：
+1. 导航栏的采集，包括：怀孕、育儿、营养、生活、用品、生男生女、食谱、用品常识
+2. 二级导航，包括：孕育周刊、母婴检查、疾病防疫、营养饮食、保健护理
+3. 三级导航，包括: 备孕百科及子分类等
+"""
+
+import json
+import requests
+
+from parser import parse_cates
+from parser import parse_detail_page
+
+from http import download_page
+ 
+
+def crawl_page(name, url):
+    """ 分析当前页面，拿到所有的URL并把URL写入到远程的中心服务器 """
+    resp = download_page(url)
+    if not resp:
+        return ""
+    print "Starting to crawl cate: %s with url: %s" % (name, url)
+    with open("banner_cates/%s.txt" % name, "w") as fp:
+        data = json.dumps(parse_cates(name, url, resp.text))
+        fp.write(json.dumps(data))
+
+    print "Done of crawl cate: %s with url: %s" % (name, url)
+
+
+def crawl_detail_page(name, url):
+    """ 采集具体的页面 """
+    resp = requests.get(url)
+    content, result = parse_detail_page(resp.text)
+    print resp.text
+
+
+#def PCBabyCrawler(BaseCrawler):
+#    """ baike.pcbaby.com.cn对应的爬虫实现 """
+#
+#    def task_consumer_worker(self):
+#        """
+#            获取一个seed URL，爬取页面并判断是否是叶子页面，
+#            如果是，则发送到远程的中心服务的URL队列，并且类型为leaf。
+#            如果是依然是种子节点，则发送到远程中心服务的URL队列，类型为seed
+#        """
+#        pass
+#
+#    def get_task(self):
+#        """ 从远程服务器获取pcbaby的爬虫种子 """
+#        return "http://baike.pcbaby.com.cn/yunqian.html"
+
+
+if __name__ == "__main__":
+
+    #url = "http://baike.pcbaby.com.cn/yunqian.html"
+    url_dict = {"yunqian": "http://baike.pcbaby.com.cn/yunqian.html",
+                "yunqi": "http://baike.pcbaby.com.cn/yunqi.html",
+                #"fenmian": "http://baike.pcbaby.com.cn/fenmian.html",
+                "yuezi": "http://baike.pcbaby.com.cn/yuezi.html"}
+                #"xinshenger": "http://baike.pcbaby.com.cn/xinshenger.html"}
+                #"yinger": "http://baike.pcbaby.com.cn/yinger.html",
+                #"youer": "http://baike.pcbaby.com.cn/youer.html",
+                #"xuelingqian": "http://baike.pcbaby.com.cn/xuelingqian.html",
+                #"meishi": "http://baike.pcbaby.com.cn/meishi.html",
+                #"shenghuo": "http://baike.pcbaby.com.cn/shenghuo.html",
+                #"yongpin": "http://baike.pcbaby.com.cn/yongpin.html"}
+    for name, url in url_dict.iteritems():
+        crawl_page(name, url)
+
+    #url = "http://baike.pcbaby.com.cn/qzbd/4495.html"
+    #crawl_detail_page("", url)

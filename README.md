@@ -1,2 +1,11 @@
-# onedrop
-onedrop is a simple distribute crawler framework.
+## OneDrop
+
+### Intro
+OneDrop是一个基于HTTP的分布式爬虫系统。
+所有的采集任务通过中心服务进行管理。
+所有的爬虫节点使用HTTP跟中心服务进行沟通。包括：
+1. 爬虫注册
+2. 任务获取
+3. 任务结果回传
+4. 心跳回传
+

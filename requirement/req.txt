@@ -1,0 +1,11 @@
+# 网络库
+requests
+
+# 解析页面
+lxml
+
+# debug
+ipdb
+
+# 并发库
+gevent
