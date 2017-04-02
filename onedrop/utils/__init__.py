@@ -2,7 +2,7 @@
 #
 
 
-import json 
+import json
 from django.conf import settings
 
 from django.http import HttpResponse
@@ -28,3 +28,12 @@ def make_api_response(result=None, page_info=None, message=""):
 
     resp = HttpResponse(json.dumps(ret), content_type="application/json")
     return resp
+
+
+def smart_str(o):
+    """ 格式化给定的字符串，如果给定的是unicode，那么转换成str """
+
+    if isinstance(o, unicode):
+        return o.encode('utf8')
+    else:
+        return o

@@ -140,5 +140,5 @@ GRAPHENE = {
 REDIS_HOST = "localhost"
 REDIS_PORT = 6379
 
-TASK_QUEUE = {"seed": "onedrop.crawler.seed",
-              "detail": "onedrop.crwaler.detail"}
+TASK_QUEUE_MAPPER = {"seed": "onedrop.crawler.seed",
+                     "task": "onedrop.crawler.task"}

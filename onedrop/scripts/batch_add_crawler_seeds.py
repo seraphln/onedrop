@@ -40,6 +40,7 @@ def backend():
 
         print "Putting %s to redis" % seed.name
 
+        rop.add_task_queue("onedrop.crawler.seed", str(seed.id))
         rop.add_task_queue("seed", str(seed.id))
 
 
