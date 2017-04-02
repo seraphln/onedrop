@@ -6,12 +6,15 @@
 pcbaby对应的parser实现
 """
 
+import json
+import base64
 import lxml.etree
 
-from http import download_page
+from utils import update_crawler_task
+from utils import update_crawler_task_by_rest_api
 
 
-def parse_cates(cate, url, html):
+def parse_cates(cate, url, html, resp):
     """
         解析分类以及对应的子分类信息
 
@@ -25,7 +28,7 @@ def parse_cates(cate, url, html):
         @type html: String
     """
 
-    result = {}
+    result_dict = {}
 
     el = lxml.etree.HTML(html)
     cates = el.xpath("//div[@class='baike-th']")
@@ -35,41 +38,43 @@ def parse_cates(cate, url, html):
     for i, cate in enumerate(cates):
         print "Starting to crawl cate: %s, %s of %s" % (cate, i, len(cates))
         cate_name = cate.xpath("./div[@class='baike-th-name']/text()")[0]
-        cate_dict = result.setdefault(cate_name, {})
+        # 主分类
+        print cate_name
+        cate_dict = {}
+        #cate_dict = result_dict.setdefault(cate_name, {})
 
-        sub_cate = sub_cates[i]
-        sub_cate_name = sub_cate.xpath("./div[@class='baike-tb-dl']/dl/dt/a/text()")[0]
-        sub_cate_url = sub_cate.xpath("./div[@class='baike-tb-dl']/dl/dt/a/@href")[0]
+        # 二级分类
+        cur_sub_cates = sub_cates[i].xpath("./div[@class='baike-tb-dl']")
+        for cur_sub_cate in cur_sub_cates:
+            sub_cate_name = cur_sub_cate.xpath("./dl/dt/a/text()")[0]
+            sub_cate_dict = cate_dict.setdefault(sub_cate_name, {})
+            sub_cate_dict.update({"name": sub_cate_name,
+                                  "url": cur_sub_cate.xpath("./dl/dt/a/@href")[0]})
 
-        sub_dict = cate_dict.setdefault(sub_cate_name, {})
-        sub_dict.update({"name": sub_cate_name, "url": sub_cate_url})
+            # 三级分类
+            third_cates = cur_sub_cate.xpath("./dl/dd/span")
+            for i, third_cate in enumerate(third_cates):
+                print "Starting to crawl third_cate: %s, %s of %s" % (third_cate, i, len(third_cates))
+                third_cate_name = third_cate.xpath("./a/text()")[0]
+                third_cate_url = third_cate.xpath("./a/@href")[0]
+                sub_cate_dict.setdefault("third_cates", []).append({"name": third_cate_name,
+                                                                    "url": third_cate_url})
 
-        third_cates = sub_cate.xpath("./div[@class='baike-tb-dl']/dl/dd/span")
-        for i, third_cate in enumerate(third_cates):
-            print "Starting to crawl third_cate: %s, %s of %s" % (third_cate, i, len(third_cates))
-            third_cate_name = third_cate.xpath("./a/text()")[0]
-            third_cate_url = third_cate.xpath("./a/@href")[0]
+                # 发送分类信息到线上
+                params = {"name": third_cate_name,
+                          "category": sub_cate_name,
+                          "parent_category": cate_name,
+                          "url": third_cate_url,
+                          "ttype": "leaf"}
+                update_crawler_task(base64.urlsafe_b64encode(json.dumps(params)))
 
-            sub_dict.setdefault(third_cate_name, {}).update({"name": third_cate_name,
-                                                             "url": third_cate_url})
-
-            # 获取url，并采集url对应页面信息
-            try:
-                resp = download_page(third_cate_url)
-                content, cur_result = parse_detail_page(resp.text)
-            except:
-                content, cur_result = "", {}
-
-            print "Done of crawl third_cate: %s, %s of %s" % (third_cate, i, len(third_cates))
-            sub_dict.setdefault(third_cate_name, {}).update({"content": content,
-                                                             "result": cur_result})
-
+        result_dict[cate_name] = cate_dict
         print "Cate: %s, %s of %s" % (cate, i, len(cates))
     print "Done of crawl cates with length: %s" % len(cates)
-    return result
+    return result_dict
 
 
-def parse_detail_page(html):
+def parse_detail_page(html, task):
     """ 解析详细的html页面，采集正文信息 """
     el = lxml.etree.HTML(html)
     els = el.xpath("//div[@class='mb30 border shadow mt30']/div[@class='l-tbody']")
@@ -101,11 +106,14 @@ def parse_detail_page(html):
             content = "%s\n%s\n%s" % (content, tmp_title, tmp_content)
             result[tmp_title] = tmp_content
 
+    # 将采集到的数据发送到远程服务器
+    task.update({"content": content,
+                 "result": result,
+                 "page": html,
+                 "status": "finished"})
+    update_crawler_task_by_rest_api(base64.urlsafe_b64encode(json.dumps(task)))
     return content, result
 
 
-
-
 if __name__ == "__main__":
-    html = ""
-    parse_cates("", "", html)
+    parse_detail_page("")

@@ -12,12 +12,16 @@
 """
 
 import json
+import time
 import requests
 
 from parser import parse_cates
 from parser import parse_detail_page
 
 from http import download_page
+
+from utils import get_crawler_seed
+from utils import get_crawler_task
  
 
 def crawl_page(name, url):
@@ -56,22 +60,77 @@ def crawl_detail_page(name, url):
 #        return "http://baike.pcbaby.com.cn/yunqian.html"
 
 
+def backend():
+    """
+    1. 启动爬虫
+    2. 获取要爬取的seed
+    [{u'node': {u'url': u'http://baike.pcbaby.com.cn/fenmian.html',
+                u'source': u'\u592a\u5e73\u6d0b\u4eb2\u5b50\u7f51',
+                u'status': u'running',
+                u'id': u'Q3Jhd2xlclNlZWRzOjM=',
+                u'name': u'\u4eb2\u5b50\u767e\u79d1\u5206\u5a29'}}]
+    3. 抓取seed页面，并把分类信息发送到服务器
+    """
+    while 1:
+        seed = get_crawler_seed()
+        if not seed:
+            print "No more seed! Going home now!!!"
+            return
+        else:
+            seed = seed.get("data", {}).get("seeds")
+            url = seed.get('url')
+            resp = download_page(url)
+            if not resp:
+                print "Cannot get current page: %s, Going home now!!!" % url
+                return ""
+            parse_cates(seed.get("name"), url, resp.text, resp)
+
+
+def page_backend():
+    """
+    1. 启动爬虫
+    2. 获取要爬取的url
+    {'data': {'tasks': {u'url': u'http://baike.pcbaby.com.cn/qzbd/4495.html',
+                        u'status': u'running',
+                        u'id': u'Q3Jhd2xlclRhc2tzOjM=',
+                        u'name': u'\u4e0d\u5b55\u4e0d\u80b2\u68c0\u67e5'}}}
+    3. 抓取url页面，并把结果信息发送到服务器
+    """
+    while 1:
+        try:
+            task = get_crawler_task()
+            if not task:
+                print "No more seed! Going home now!!!"
+                return
+            else:
+                task = task.get("data", {}).get("tasks")
+                url = task.get('url')
+                resp = download_page(url)
+                if not resp:
+                    print "Cannot get current page: %s, sleeping now!!!" % url
+                parse_detail_page(resp.text, task)
+        except:
+            time.sleep(3)
+
+
 if __name__ == "__main__":
 
     #url = "http://baike.pcbaby.com.cn/yunqian.html"
-    url_dict = {"yunqian": "http://baike.pcbaby.com.cn/yunqian.html",
-                "yunqi": "http://baike.pcbaby.com.cn/yunqi.html",
-                #"fenmian": "http://baike.pcbaby.com.cn/fenmian.html",
-                "yuezi": "http://baike.pcbaby.com.cn/yuezi.html"}
-                #"xinshenger": "http://baike.pcbaby.com.cn/xinshenger.html"}
-                #"yinger": "http://baike.pcbaby.com.cn/yinger.html",
-                #"youer": "http://baike.pcbaby.com.cn/youer.html",
-                #"xuelingqian": "http://baike.pcbaby.com.cn/xuelingqian.html",
-                #"meishi": "http://baike.pcbaby.com.cn/meishi.html",
-                #"shenghuo": "http://baike.pcbaby.com.cn/shenghuo.html",
-                #"yongpin": "http://baike.pcbaby.com.cn/yongpin.html"}
-    for name, url in url_dict.iteritems():
-        crawl_page(name, url)
+    #url_dict = {"yunqian": "http://baike.pcbaby.com.cn/yunqian.html",
+    #            "yunqi": "http://baike.pcbaby.com.cn/yunqi.html",
+    #            #"fenmian": "http://baike.pcbaby.com.cn/fenmian.html",
+    #            "yuezi": "http://baike.pcbaby.com.cn/yuezi.html"}
+    #            #"xinshenger": "http://baike.pcbaby.com.cn/xinshenger.html"}
+    #            #"yinger": "http://baike.pcbaby.com.cn/yinger.html",
+    #            #"youer": "http://baike.pcbaby.com.cn/youer.html",
+    #            #"xuelingqian": "http://baike.pcbaby.com.cn/xuelingqian.html",
+    #            #"meishi": "http://baike.pcbaby.com.cn/meishi.html",
+    #            #"shenghuo": "http://baike.pcbaby.com.cn/shenghuo.html",
+    #            #"yongpin": "http://baike.pcbaby.com.cn/yongpin.html"}
+    #for name, url in url_dict.iteritems():
+    #    crawl_page(name, url)
 
     #url = "http://baike.pcbaby.com.cn/qzbd/4495.html"
     #crawl_detail_page("", url)
+    #backend()
+    page_backend()

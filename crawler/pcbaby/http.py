@@ -117,6 +117,10 @@ def download_page(url, timeout=1, headers=None, proxies=None):
             if cookies:
                 query_dict['cookies'] = cookies
             resp = requests.get(**query_dict)
+            if "Unauthorized" in resp.text or "unauthorized" in resp.text:
+                remove_proxy(host, port, http_method, proxies)
+                continue
+
             if resp.text:
                 _cookie = resp.cookies
                 break
