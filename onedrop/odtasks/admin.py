@@ -9,9 +9,9 @@ onedrop的odtasks模块的后台管理配置
 
 from django.contrib import admin
 
-from ondrop.odtasks.models import CrawlerNodes
-from ondrop.odtasks.models import CrawlerSeeds
-from ondrop.odtasks.models import CrawlerTasks
+from onedrop.odtasks.models import CrawlerNodes
+from onedrop.odtasks.models import CrawlerSeeds
+from onedrop.odtasks.models import CrawlerTasks
 
 
 class CrawlerSeedsAdmin(admin.ModelAdmin):

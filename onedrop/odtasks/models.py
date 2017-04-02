@@ -24,6 +24,7 @@ class CrawlerSeeds(models.Model):
     """ 数据采集任务的种子管理 """
     name = models.CharField(max_length=128, verbose_name=u"爬虫种子的名字")
     source = models.CharField(max_length=128, verbose_name=u"爬虫种子来源")
+    url = models.CharField(max_length=255, verbose_name=u"种子的URL")
     user = models.ForeignKey(OdUser, verbose_name=u"爬虫种子创建人")
     status = models.CharField(max_length=32, verbose_name=u"爬虫种子状态")
     last_crawl_on = models.DateTimeField(default=timezone.now,

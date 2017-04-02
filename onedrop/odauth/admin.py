@@ -3,7 +3,7 @@
 
 from django.contrib import admin
 
-from anduin.adauth.models import OdUser
+from onedrop.odauth.models import OdUser
 
 
 class OdUserAdmin(admin.ModelAdmin):

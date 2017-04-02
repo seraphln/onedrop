@@ -19,11 +19,6 @@ Including another URLconf
 from django.conf.urls import url
 from django.contrib import admin
 
-from onedrop.odtasks.views import CrawlerURLManager
-from onedrop.odtasks.views import CrawlerTaskManager
-
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
-    url(r'^api/url_manager/$', CrawlerURLManager.as_view()),
-    url(r'^api/url_task/$', CrawlerTaskManager.as_view()),
 ]

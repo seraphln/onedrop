@@ -73,5 +73,5 @@ class OdUser(AbstractBaseUser, BaseUserInfo):
 
     class Meta:
         ordering = ("-created_on", )
-        verbose_name = u"OneDrop用户模块"
-        verbose_name_plural = u"OneDrop用户模块"
+        verbose_name = u"OneDrop用户管理"
+        verbose_name_plural = u"OneDrop用户管理"
