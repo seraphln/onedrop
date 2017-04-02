@@ -37,13 +37,16 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'onedrop.odauth',
+    'onedrop.odtasks',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
+    #'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -54,7 +57,7 @@ ROOT_URLCONF = 'onedrop.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': ["%s/onedrop/templates" % BASE_DIR],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -105,7 +108,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Shanghai'
 
 USE_I18N = True
 
@@ -118,3 +121,21 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.10/howto/static-files/
 
 STATIC_URL = '/static/'
+
+# 自定义用户
+AUTH_USER_MODEL = 'odauth.OdUser'
+
+# 自定义cookie key
+USER_COOKIE = "oduser"
+
+# graphene的schema路径
+GRAPHENE = {
+    "SCHEMA": "onedrop.schema.schema",
+}
+
+# 任务队列用到的配置信息
+REDIS_HOST = "localhost"
+REDIS_PORT = 6379
+
+TASK_QUEUE = {"seed": "onedrop.crawler.seed",
+              "detail": "onedrop.crwaler.detail"}
