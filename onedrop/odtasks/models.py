@@ -9,14 +9,9 @@
 
 from __future__ import unicode_literals
 
-import json
-import base64
-
 from django.db import models
-from django.conf import settings
 from django.utils import timezone
 
-from onedrop.utils.redis_op import rop
 from onedrop.odauth.models import OdUser
 
 
@@ -49,8 +44,10 @@ class CrawlerSeeds(models.Model):
 class CrawlerTasks(models.Model):
     """ 数据采集任务对应的URL以及管理结果 """
     url = models.CharField(max_length=255, verbose_name=u"需要采集的URL")
+    name = models.CharField(max_length=128, verbose_name=u"当前采集任务的主题")
     # node, leaf
     ttype = models.CharField(max_length=32, verbose_name=u"当前任务的类型")
+    source = models.CharField(max_length=32, verbose_name=u"任务来源", default="pcbaby")
     status = models.CharField(max_length=32,
                               default="pending",
                               verbose_name=u"数据采集任务的执行结果")
@@ -62,6 +59,10 @@ class CrawlerTasks(models.Model):
                               blank=True,
                               null=True,
                               verbose_name=u"采集回来的原始结果")
+    page = models.TextField(default="",
+                            blank=True,
+                            null=True,
+                            verbose_name=u"原始页面")
     category = models.CharField(max_length=128,
                                 null=True,
                                 blank=True,

@@ -11,16 +11,14 @@ import graphene
 from graphene import relay
 from graphene import AbstractType
 
-from django.conf import settings
-
 from graphene_django import DjangoObjectType
 from graphene_django.filter import DjangoFilterConnectionField
 
 from onedrop.odtasks.models import CrawlerSeeds as CrawlerSeedsModel
 from onedrop.odtasks.models import CrawlerTasks as CrawlerTasksModel
 
-from onedrop.odtasks.views import get_crawl_task
-from onedrop.odtasks.models import update_ctasks
+from onedrop.odtasks.views import get_crawler_task
+from onedrop.odtasks.funcs import update_ctasks
 
 
 class CrawlerSeeds(DjangoObjectType):
@@ -37,7 +35,7 @@ class CrawlerTasks(DjangoObjectType):
 
     class Meta:
         model = CrawlerTasksModel
-        filter_fields = ["name", "url", "ttype"]
+        filter_fields = ["category", "url", "ttype", "source"]
         interfaces = (graphene.relay.Node, )
 
 
@@ -69,23 +67,18 @@ class Query(AbstractType):
     all_crawler_tasks = DjangoFilterConnectionField(CrawlerTasks)
 
     @graphene.resolve_only_args
-    def resolve_crawler_seed(cls, **kwargs):
-        """ 获取一个爬虫种子 """
-        return get_crawl_task("seed")
-
-    @graphene.resolve_only_args
-    def resolve_crawler_task(cls, **kwargs):
-        """ 获取一个采集任务 """
-        return get_crawl_task("seed")
+    def resolve_all_crawler_seeds(cls, **kwargs):
+        """ 解析crawler seed """
+        return get_crawler_task(queue="seed", source="seed")
 
     @graphene.resolve_only_args
     def resolve_all_crawler_tasks(cls, **kwargs):
         """ 解析mtask """
-        source = settings.QUEUE_MAPPER.get(kwargs.get("source"))
+        source = kwargs.get("source")
         if not source:
             return []
         else:
-            return get_crawl_task(source=source)
+            return get_crawler_task(queue="task", source=source)
 
 
 class Mutation(AbstractType):

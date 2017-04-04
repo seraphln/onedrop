@@ -23,7 +23,7 @@ class CrawlerSeedsAdmin(admin.ModelAdmin):
 class CrawlerTasksAdmin(admin.ModelAdmin):
     """ 爬虫任务后台管理页面 """
     list_display = ("id", "ttype", "url", "status", "created_on", "modified_on")
-    search_fields = ("ttype", "url", "status")
+    search_fields = ("ttype", "url", "status", "source")
 
 
 class CrawlerNodesAdmin(admin.ModelAdmin):
