@@ -14,11 +14,22 @@ from graphene import AbstractType
 from graphene_django import DjangoObjectType
 from graphene_django.filter import DjangoFilterConnectionField
 
+from onedrop.odtasks.models import CrawlerNodes as CrawlerNodesModel
 from onedrop.odtasks.models import CrawlerSeeds as CrawlerSeedsModel
 from onedrop.odtasks.models import CrawlerTasks as CrawlerTasksModel
 
 from onedrop.odtasks.views import get_crawler_task
+from onedrop.odtasks.funcs import update_cnodes
 from onedrop.odtasks.funcs import update_ctasks
+
+
+class CrawlerNodes(DjangoObjectType):
+    """ schema中的crawlerNodes对象 """
+
+    class Meta:
+        model = CrawlerNodesModel
+        filter_fields = ["name", "status"]
+        interfaces = (graphene.relay.Node, )
 
 
 class CrawlerSeeds(DjangoObjectType):
@@ -56,6 +67,24 @@ class CrawlerTasksMutation(graphene.relay.ClientIDMutation):
         return CrawlerTasksMutation(ctask=ctask)
 
 
+class CrawlerNodesMutation(graphene.relay.ClientIDMutation):
+    """ 基于ID的nodes mutation对象 """
+
+    class Input:
+        node_info = graphene.String()
+
+    cnode = graphene.Field(CrawlerNodes)
+
+    @classmethod
+    def mutate_and_get_payload(cls, input, context, info):
+        """ 处理mutate信息 """
+        node_info = input.get("node_info")
+        remote_addr = context.environ.get("REMOTE_ADDR")
+        cnode = update_cnodes(node_info, remote_addr=remote_addr)
+
+        return CrawlerNodesMutation(cnode=cnode)
+
+
 class Query(AbstractType):
     """ odtasks app下的query结构 """
     crawler_seed = graphene.Field(CrawlerSeeds)
@@ -84,5 +113,6 @@ class Query(AbstractType):
 class Mutation(AbstractType):
     """ adtasks app下的mutation结构 """
     ctasks = CrawlerTasksMutation.Field()
+    cnodes = CrawlerNodesMutation.Field()
 
 types = [CrawlerSeeds, CrawlerTasks]

@@ -14,7 +14,24 @@ from django.utils import timezone
 
 from onedrop.utils.redis_op import rop
 
+from onedrop.odtasks.models import CrawlerNodes
 from onedrop.odtasks.models import CrawlerTasks
+
+
+def update_cnodes(result, remote_addr):
+    """ 注册爬虫信息 """
+    now = timezone.now()
+    try:
+        data = json.loads(base64.urlsafe_b64decode(str(result)))
+    except:
+        data = {}
+
+    cnode, _ = CrawlerNodes.objects.get_or_create(name=data.get("name"),
+                                                  remote_addr=remote_addr)
+    cnode.last_join_on = now
+    cnode.status = "active"
+    cnode.save()
+    return cnode
 
 
 def update_ctasks(result):
