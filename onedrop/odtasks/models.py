@@ -9,14 +9,9 @@
 
 from __future__ import unicode_literals
 
-import json
-import base64
-
 from django.db import models
-from django.conf import settings
 from django.utils import timezone
 
-from onedrop.utils.redis_op import rop
 from onedrop.odauth.models import OdUser
 
 
@@ -52,6 +47,7 @@ class CrawlerTasks(models.Model):
     name = models.CharField(max_length=128, verbose_name=u"当前采集任务的主题")
     # node, leaf
     ttype = models.CharField(max_length=32, verbose_name=u"当前任务的类型")
+    source = models.CharField(max_length=32, verbose_name=u"任务来源", default="pcbaby")
     status = models.CharField(max_length=32,
                               default="pending",
                               verbose_name=u"数据采集任务的执行结果")

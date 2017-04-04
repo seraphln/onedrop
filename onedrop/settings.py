@@ -141,4 +141,5 @@ REDIS_HOST = "localhost"
 REDIS_PORT = 6379
 
 TASK_QUEUE_MAPPER = {"seed": "onedrop.crawler.seed",
-                     "task": "onedrop.crawler.task"}
+                     "task": {"pcbaby": "onedrop.crawler.pcbaby",
+                              "xindebaby": "onedrop.crawler.xindebaby"}}
