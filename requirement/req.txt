@@ -9,3 +9,7 @@ ipdb
 
 # 并发库
 gevent
+
+# 加密库
+crypto
+pycrypto
