@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'onedrop.odauth',
     'onedrop.odtasks',
+    'onedrop.partner',
 ]
 
 MIDDLEWARE = [
