@@ -10,8 +10,8 @@ import json
 import base64
 import lxml.etree
 
-from utils import update_crawler_task
-from utils import update_crawler_task_by_rest_api
+from crawler.api_proxy import update_crawler_task
+from crawler.api_proxy import update_crawler_task_by_rest_api
 
 
 def parse_cates(cate, url, html, resp):
@@ -26,6 +26,8 @@ def parse_cates(cate, url, html, resp):
 
         @param html: 当前url对应的页面信息
         @type html: String
+
+        :return: result_dict
     """
 
     result_dict = {}
@@ -39,9 +41,7 @@ def parse_cates(cate, url, html, resp):
         print "Starting to crawl cate: %s, %s of %s" % (cate, i, len(cates))
         cate_name = cate.xpath("./div[@class='baike-th-name']/text()")[0]
         # 主分类
-        print cate_name
         cate_dict = {}
-        #cate_dict = result_dict.setdefault(cate_name, {})
 
         # 二级分类
         cur_sub_cates = sub_cates[i].xpath("./div[@class='baike-tb-dl']")
@@ -75,7 +75,17 @@ def parse_cates(cate, url, html, resp):
 
 
 def parse_detail_page(html, task):
-    """ 解析详细的html页面，采集正文信息 """
+    """
+        解析详细的html页面，采集正文信息并发送采集结果到远程服务器
+        
+        @param html: 需要解析的html页面
+        @type html: String
+
+        @param task: 从API服务器拿到的Task Dict
+        @type task: Dict
+
+        :return: (content, result)
+    """
     el = lxml.etree.HTML(html)
     els = el.xpath("//div[@class='mb30 border shadow mt30']/div[@class='l-tbody']")
     content = ""

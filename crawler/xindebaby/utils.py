@@ -9,37 +9,11 @@ import requests
 API_HOST = "http://180.76.149.212:8083/graphql?query=%s"
 
 
-def get_crawler_seed():
-    """
-        从anduin的远程服务请求一个监控任务
-    """
-    query_str = ''' query fetchCrawlerSeeds{allCrawlerSeeds {
-                        edges {
-                            node {
-                                id,
-                                name,
-                                source,
-                                url,
-                                status
-                            }
-                        }
-                    }}
-                '''
-    path = API_HOST % query_str
-    resp = requests.get(path)
-    data = json.loads(resp.text)
-    cseeds = data.get("data", {}).get("allCrawlerSeeds", {}).get("edges", [{}])
-    if not cseeds or cseeds[0].get("status") == "finished":
-        return {}
-    else:
-        return {"data": {"seeds": cseeds[0].get("node")}}
-
-
 def get_crawler_task():
     """
         从anduin的远程服务请求一个监控任务
     """
-    query_str = ''' query fetchCrawlerTasks{allCrawlerTasks {
+    query_str = ''' query fetchCrawlerTasks{allCrawlerTasks(source: "xindebaby") {
                         edges {
                             node {
                                 id,
@@ -47,6 +21,7 @@ def get_crawler_task():
                                 url,
                                 status,
                                 category,
+                                source,
                                 ttype
                             }
                         }
@@ -91,10 +66,10 @@ def update_crawler_task_by_rest_api(task_result):
 
 
 if __name__ == "__main__":
-    params = {"name": u"断奶奶涨怎么办",
-              "parent_category": u"催乳回奶",
-              "category": "断奶后回奶",
-              "url": "http://baike.pcbaby.com.cn/qzbd/1269996.html",
-              "ttype": "leaf"}
+    #params = {"name": u"断奶奶涨怎么办",
+    #          "parent_category": u"催乳回奶",
+    #          "category": "断奶后回奶",
+    #          "url": "http://baike.pcbaby.com.cn/qzbd/1269996.html",
+    #          "ttype": "leaf"}
     #print update_crawler_task(base64.urlsafe_b64encode(json.dumps(params)))
     print get_crawler_task()

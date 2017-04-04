@@ -9,13 +9,21 @@
 from gevent import monkey
 monkey.patch_all()
 
+import os
+import sys
+import json
+import base64
+import socket
 import gevent
 from gevent.queue import Queue
+from gevent.pool import Group
 
 import time
 import signal
 
 import requests
+
+from crawler.api_proxy import register_crawler_node
 
 
 class BaseCrawler(object):
@@ -23,33 +31,50 @@ class BaseCrawler(object):
 
     WORKERS = {}
 
-    def __init__(self, callback=None):
+    def __init__(self, callback=None, ttype=None, source=None):
         """ 初始化爬虫对象 """
         self.group = Group()
         self.task_queue = Queue()
+        self.task_type = ttype
         self.cb = callback
+        self.source = source
+
+    def register(self):
+        """ 将当前爬虫实例注册到服务器上 """
+        task_name = "%s-%s-%s" % (socket.gethostname(),
+                                  self.task_type,
+                                  os.getpid())
+        task_result = {"name": task_name}
+        bstr = base64.urlsafe_b64encode(json.dumps(task_result))
+        resp = register_crawler_node(bstr)
+        resp_name = resp.get("data", {}).get("cnodes", {}).get("cnode", {}).get("name")
+        if resp_name != task_name:
+            return False
+
+        return True
 
     def get_task(self):
         """ 从远程接口获取需要采集的任务信息 """
         pass
 
-    def task_consumer_worker(self):
-        """ 爬虫消息消费入口 """
-        pass
-
     def process_worker(self):
         """
             任务执行主流程
-            1. 获取爬虫任务
-            2. 处理任务
+            1. 注册爬虫
+            2. 获取爬虫任务
+            3. 处理任务
         """
+        if not self.register():
+            print "Register current node failed. Going Home Now!!!"
+            return
+
         while True:
-            msg = None
+            task = None
             try:
                 task = self.get_task()
             except Exception as e:
                 print str(e)
-                msg = None
+                task = None
                 if not task:
                     continue
             try:
@@ -59,7 +84,6 @@ class BaseCrawler(object):
                 print 'task callback error:%s' % (e) 
 
     def start(self):
-        self.group.spawn(self.task_consumer_worker)
         self.group.spawn(self.process_worker)
 
     #def stop(self, graceful=True):
