@@ -179,9 +179,8 @@ def register_crawler_node(task_result):
 
     query_str = query_str % str(task_result)
 
-    path = GRAPHQL_HOST % query_str
-    resp = requests.post(path)
-    return json.loads(resp.text)
+    url = GRAPHQL_HOST % query_str
+    return request("POST", url)
 
 
 def update_crawler_task(task_result):
@@ -198,10 +197,8 @@ def update_crawler_task(task_result):
     '''
 
     query_str = query_str % str(task_result)
-
-    path = API_HOST % query_str
-    resp = requests.post(path)
-    return json.loads(resp.text)
+    url = GRAPHQL_HOST % query_str
+    return request("POST", url)
 
 
 if __name__ == "__main__":
