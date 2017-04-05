@@ -28,7 +28,8 @@ class CrawlerTasksAdmin(admin.ModelAdmin):
 
 class CrawlerNodesAdmin(admin.ModelAdmin):
     """ 爬虫节点后台管理页面 """
-    list_display = ("id", "name", "remote_addr", "status", "last_join_on", "last_offline_one")
+    list_display = ("id", "name", "remote_addr",
+                    "status", "last_join_on", "last_offline_one")
     search_fields = ("name", "remote_addr", "status")
 
 
