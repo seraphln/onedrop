@@ -55,6 +55,7 @@ def update_cnodes(result, remote_addr):
                                                   remote_addr=remote_addr)
     cnode.last_join_on = now
     cnode.status = "active"
+    cnode.name = cnode.name.encode('utf8')
     cnode.save()
     return cnode
 

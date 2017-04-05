@@ -22,6 +22,8 @@ from onedrop.odtasks.funcs import update_cnodes
 from onedrop.odtasks.funcs import update_ctasks
 from onedrop.odtasks.funcs import get_crawler_task
 
+from onedrop.partner.utils import check_permission
+
 
 class CrawlerNodes(DjangoObjectType):
     """ schema中的crawlerNodes对象 """
@@ -61,8 +63,10 @@ class CrawlerTasksMutation(graphene.relay.ClientIDMutation):
     @classmethod
     def mutate_and_get_payload(cls, input, context, info):
         """ 处理mutate信息 """
-        task_result = input.get("task_result")
+        if not check_permission(context):
+            return []
 
+        task_result = input.get("task_result")
         ctask = update_ctasks(task_result)
         return CrawlerTasksMutation(ctask=ctask)
 
@@ -78,6 +82,8 @@ class CrawlerNodesMutation(graphene.relay.ClientIDMutation):
     @classmethod
     def mutate_and_get_payload(cls, input, context, info):
         """ 处理mutate信息 """
+        if not check_permission(context):
+            return CrawlerNodesMutation(cnode=None)
         node_info = input.get("node_info")
         remote_addr = context.environ.get("REMOTE_ADDR")
         cnode = update_cnodes(node_info, remote_addr=remote_addr)
@@ -95,14 +101,19 @@ class Query(AbstractType):
     crawler_tasks = relay.Node.Field(CrawlerTasks)
     all_crawler_tasks = DjangoFilterConnectionField(CrawlerTasks)
 
-    @graphene.resolve_only_args
-    def resolve_all_crawler_seeds(cls, **kwargs):
+    #@graphene.resolve_only_args
+    #def resolve_all_crawler_seeds(cls, **kwargs):
+    def resolve_all_crawler_seeds(self, args, context, info):
         """ 解析crawler seed """
+        if not check_permission(context):
+            return []
         return get_crawler_task(queue="seed", source="seed")
 
     @graphene.resolve_only_args
     def resolve_all_crawler_tasks(cls, **kwargs):
         """ 解析mtask """
+        if not check_permission(context):
+            return []
         source = kwargs.get("source")
         if not source:
             return []
