@@ -18,9 +18,9 @@ from onedrop.odtasks.models import CrawlerNodes as CrawlerNodesModel
 from onedrop.odtasks.models import CrawlerSeeds as CrawlerSeedsModel
 from onedrop.odtasks.models import CrawlerTasks as CrawlerTasksModel
 
-from onedrop.odtasks.views import get_crawler_task
 from onedrop.odtasks.funcs import update_cnodes
 from onedrop.odtasks.funcs import update_ctasks
+from onedrop.odtasks.funcs import get_crawler_task
 
 from onedrop.partner.utils import check_permission
 
