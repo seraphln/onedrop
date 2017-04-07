@@ -10,9 +10,5 @@ ipdb
 # 并发库
 gevent
 
-# 加密库
-crypto
-pycrypto
-
-# 后台用到的daterange filter
-django-daterange-filter
+# 后台的页面样式模板
+django-suit

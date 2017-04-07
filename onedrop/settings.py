@@ -34,13 +34,13 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'suit',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'daterange_filter',
     'onedrop.odauth',
     'onedrop.odtasks',
     'onedrop.partner',
@@ -74,6 +74,7 @@ TEMPLATES = [
         },
     },
 ]
+
 
 WSGI_APPLICATION = 'onedrop.wsgi.application'
 
@@ -137,6 +138,8 @@ USER_COOKIE = "oduser"
 GRAPHENE = {
     "SCHEMA": "onedrop.schema.schema",
 }
+
+STATIC_ROOT = "/home/work/envs/graphene_envs/onedrop/static/"
 
 # 任务队列用到的配置信息
 REDIS_HOST = "localhost"

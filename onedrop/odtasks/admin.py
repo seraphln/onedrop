@@ -8,7 +8,7 @@ onedrop的odtasks模块的后台管理配置
 
 
 from django.contrib import admin
-from daterange_filter.filter import DateRangeFilter
+from django.contrib.admin import DateFieldListFilter
 
 from onedrop.odtasks.models import CrawlerNodes
 from onedrop.odtasks.models import CrawlerSeeds
@@ -25,9 +25,10 @@ class CrawlerSeedsAdmin(admin.ModelAdmin):
                     "created_on",
                     "modified_on",
                     "last_crawl_on")
-    list_filter = (("created_on", DateRangeFilter),
-                   ("modified_on", DateRangeFilter),
-                   ("last_crawl_on", DateRangeFilter))
+    list_filter = ("status",
+                   ("created_on", DateFieldListFilter),
+                   ("modified_on", DateFieldListFilter),
+                   ("last_crawl_on", DateFieldListFilter))
     search_fields = ("name", "url", "user")
 
 
@@ -41,9 +42,9 @@ class CrawlerTasksAdmin(admin.ModelAdmin):
                     "created_on",
                     "modified_on")
     list_filter = ("status",
-                   ("created_on", DateRangeFilter),
-                   ("modified_on", DateRangeFilter),
-                   ("last_crawl_on", DateRangeFilter))
+                   ("created_on", DateFieldListFilter),
+                   ("modified_on", DateFieldListFilter),
+                   ("last_crawl_on", DateFieldListFilter))
     search_fields = ("ttype", "url", "status", "source")
 
 
@@ -57,7 +58,7 @@ class CrawlerNodesAdmin(admin.ModelAdmin):
                     "last_offline_one")
     list_filter = ("status",
                    "name",
-                   ("last_join_on", DateRangeFilter))
+                   ("last_join_on", DateFieldListFilter))
     search_fields = ("name", "remote_addr", "status")
 
 
