@@ -13,3 +13,6 @@ gevent
 # 加密库
 crypto
 pycrypto
+
+# 后台用到的daterange filter
+django-daterange-filter
