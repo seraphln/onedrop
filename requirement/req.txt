@@ -10,5 +10,20 @@ ipdb
 # 并发库
 gevent
 
+# web服务
+django
+
 # 后台的页面样式模板
 django-suit
+
+# graphql
+graphene
+django-graphene
+
+# 进程管理
+supervisor
+
+# 异步任务框架
+celery==3.1
+django-celery
+django-celery-results

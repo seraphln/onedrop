@@ -1,6 +1,10 @@
 # coding=utf8
 #
 
+# 配置djcelery
+import djcelery
+djcelery.setup_loader()
+
 """
 Django settings for onedrop project.
 
@@ -44,6 +48,8 @@ INSTALLED_APPS = [
     'onedrop.odauth',
     'onedrop.odtasks',
     'onedrop.partner',
+    'djcelery',
+    'onedrop.crontasks',
 ]
 
 MIDDLEWARE = [
@@ -148,3 +154,13 @@ REDIS_PORT = 6379
 TASK_QUEUE_MAPPER = {"seed": "onedrop.crawler.seed",
                      "task": {"pcbaby": "onedrop.crawler.pcbaby",
                               "xindebaby": "onedrop.crawler.xindebaby"}}
+
+
+# celery的相关配置
+BROKER_URL = 'redis://localhost:6379/0'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+
+CELERYBEAT_SCHEDULER = 'djcelery.schedulers.DatabaseScheduler'
