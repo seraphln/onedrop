@@ -85,6 +85,12 @@ def update_ctasks(result):
                                                       ttype=ttype,
                                                       name=name,
                                                       category=category)
+        source = data.ge("source")
+
+        # 先判断当前的task和source是否存在，如果不存在，则返回
+        queue = settings.TASK_QUEUE_MAPPER.get("task").get(source)
+        if not queue:
+            return None
         # 新创建的记录
         if flag:
             ct.created_on = now
@@ -92,19 +98,20 @@ def update_ctasks(result):
                 ct.parent_category = data.get("parent_category")
 
             # 更新任务来源
-            ct.source = data.get("source")
-            queue = settings.TASK_QUEUE_MAPPER.get("task").get(ct.source)
-            if not queue:
-                return None
-
+            ct.source = source
             # 将任务发送到消息队列
             rop.add_task_queue(queue, str(ct.id))
         # 更新记录
         else:
-            # 没有content，并且原文内容为空时，认为没抓取到
-            # 这是由于有一些页面确实没有内容
+            # 如果没有content也没有page的话，认为本次抓取失败
+            # 则需要把当前的采集任务再放回到任务队列中
             if not data.get("content") and not data.get("page"):
-                return None
+                # 修改任务状态
+                ct.status = "pending"
+                ct.save()
+                rop.add_task_queue(queue, str(ct.id))
+                # 任务加入到redis之后，直接退出
+                return
 
             # 将传递过来的content, result, page
             ct.status = "finished"
@@ -122,7 +129,7 @@ def update_ctasks(result):
 def get_crawler_task(ttype="task", source=None):
     """
         从任务队列获取一个采集任务
-       
+
         @param ttype: 当前的任务类型
         @type ttype: String
 
