@@ -1,8 +1,10 @@
 # 网络库
 requests
+httplib2
 
 # 解析页面
 lxml
+xmltodict
 
 # debug
 ipdb

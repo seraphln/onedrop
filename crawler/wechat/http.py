@@ -54,7 +54,8 @@ def get_proxy(if_force=False):
                         "Host": 'www.xicidaili.com',
                         "Connection": "keep-alive",
                         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-                        "Upgrade-Insecure-Requests": 1})
+                        "Upgrade-Insecure-Requests": "1"})
+        print headers
         resp = requests.get(url, headers=headers)
         _cookie = resp.cookies
         try:
@@ -119,7 +120,12 @@ def download_page(url, headers=None, timeout=1, proxies=None, not_proxy=False):
             if not_proxy:
                 query_dict.pop("proxies")
             resp = requests.get(**query_dict)
-            if "Unauthorized" in resp.text or "unauthorized" in resp.text:
+            if resp.status_code != 200:
+                print "Got an except resp code: %s" % resp.status_code
+                continue
+
+            if "Unauthorized" in resp.text or "unauthorized" in resp.text or u"请输入验证码" in resp.text:
+                print "Got an exception in downloading page"
                 remove_proxy(host, port, http_method, proxies)
                 continue
 
