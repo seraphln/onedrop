@@ -42,8 +42,8 @@ class BaseCrawler(object):
     def register(self):
         """ 将当前爬虫实例注册到服务器上 """
         task_name = "%s-%s-%s" % (socket.gethostname(),
-                                  self.task_type,
-                                  os.getpid())
+                                  self.source,
+                                  self.task_type)
         task_result = {"name": task_name}
         bstr = base64.urlsafe_b64encode(json.dumps(task_result))
         resp = register_crawler_node(bstr)
@@ -79,23 +79,14 @@ class BaseCrawler(object):
                     continue
             try:
                 if self.cb:
-                    self.cb(task)
+                    if not self.cb(task):
+                        print "No tasks, Going home now!!!, Bye!"
+                        break
             except Exception as e:
                 print 'task callback error:%s' % (e) 
 
     def start(self):
         self.group.spawn(self.process_worker)
-
-    #def stop(self, graceful=True):
-    #    """ 停止爬虫任务 """
-    #    # self.LISTENERS = []
-    #    sig = signal.SIGQUIT if graceful else signal.SIGTERM
-    #    limit = time.time() + self.graceful_timeout
-    #    while self.WORKERS and time.time() < limit:
-    #        self.kill_workers(self.WORKERS.keys(), sig)
-    #        time.sleep(0.1)
-    #        self.reap_workers()
-    #    self.kill_workers(self.WORKERS.keys(), signal.SIGKILL) # force quit after gracefull timeout
 
     def kill_workers(self, pids, sig=signal.SIGQUIT):
         """

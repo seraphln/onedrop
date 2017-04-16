@@ -45,8 +45,7 @@ def msg_handler(task):
     {'data': {'tasks': None}}
     """
     if task is None or task.get("data", {}).get("tasks") is None:
-        print "No more seed! Going home now!!!"
-        return
+        return False
     else:
         try:
             task = task.get("data", {}).get("tasks")
@@ -58,6 +57,8 @@ def msg_handler(task):
             parse_detail_page(resp.text, task)
         except:
             print "Task: %s with Type: %s" % (task, type(task))
+
+    return True
 
 
 if __name__ == "__main__":
