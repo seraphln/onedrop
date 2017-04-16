@@ -151,9 +151,10 @@ STATIC_ROOT = "/home/work/envs/graphene_envs/onedrop/static/"
 REDIS_HOST = "localhost"
 REDIS_PORT = 6379
 
-TASK_QUEUE_MAPPER = {"seed": "onedrop.crawler.seed",
-                     "task": {"pcbaby": "onedrop.crawler.pcbaby",
-                              "xindebaby": "onedrop.crawler.xindebaby"}}
+TASK_QUEUE_MAPPER = {"seed": {"pcbaby": "onedrop.crawler.seed.pcbaby",
+                              "xindebaby": "onedrop.crawler.seed.xindebaby"},
+                     "task": {"pcbaby": "onedrop.crawler.task.pcbaby",
+                              "xindebaby": "onedrop.crawler.task.xindebaby"}}
 
 
 # celery的相关配置

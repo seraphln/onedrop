@@ -101,24 +101,20 @@ class Query(AbstractType):
     crawler_tasks = relay.Node.Field(CrawlerTasks)
     all_crawler_tasks = DjangoFilterConnectionField(CrawlerTasks)
 
-    #@graphene.resolve_only_args
-    #def resolve_all_crawler_seeds(cls, **kwargs):
-    def resolve_all_crawler_seeds(self, args, context, info):
+    def resolve_all_crawler_seeds(self, kwargs, context, info):
         """ 解析crawler seed """
+        source = kwargs.get("source", "seed")
         if not check_permission(context):
             return []
-        return get_crawler_task(queue="seed", source="seed")
+        return get_crawler_task(ttype="seed", source=source)
 
-    @graphene.resolve_only_args
-    def resolve_all_crawler_tasks(cls, **kwargs):
+    def resolve_all_crawler_tasks(cls, kwargs, context, info):
         """ 解析mtask """
-        if not check_permission(context):
-            return []
         source = kwargs.get("source")
-        if not source:
+        if not check_permission(context) or not source:
             return []
         else:
-            return get_crawler_task(queue="task", source=source)
+            return get_crawler_task(ttype="task", source=source)
 
 
 class Mutation(AbstractType):

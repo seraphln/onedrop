@@ -10,6 +10,7 @@ from celery import task
 
 from datetime import datetime
 from datetime import timedelta
+from django.conf import settings
 
 from onedrop.utils.redis_op import rop
 
@@ -25,10 +26,13 @@ def cron_add_pcbaby_tasks_weekly():
     now = datetime.utcnow()
     seeds = CrawlerSeeds.objects.filter()
 
+    queue = settings.TASK_QUEUE_MAPPER.get("seed", {}).get("pcbaby")
+
     for seed in seeds:
         seed.modified_on = now
         seed.last_crawl_on = now
         seed.status = "crawling"
         seed.save()
 
-        rop.add_task_queue("onedrop.crawler.seed", str(seed.id))
+        print "Going to put task: %s to queue: %s" % (seed.id, queue)
+        rop.add_task_queue(queue, str(seed.id))

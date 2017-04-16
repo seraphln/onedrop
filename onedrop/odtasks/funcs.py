@@ -85,7 +85,7 @@ def update_ctasks(result):
                                                       ttype=ttype,
                                                       name=name,
                                                       category=category)
-        source = data.ge("source")
+        source = data.get("source")
 
         # 先判断当前的task和source是否存在，如果不存在，则返回
         queue = settings.TASK_QUEUE_MAPPER.get("task").get(source)
@@ -138,19 +138,16 @@ def get_crawler_task(ttype="task", source=None):
 
         :return: [task_obj, ]
     """
+    queue = settings.TASK_QUEUE_MAPPER.get(ttype, {}).get(source)
     now = timezone.now()
-    if ttype == "seed":
-        queue = settings.TASK_QUEUE_MAPPER.get(ttype)
-    else:
-        queue = settings.TASK_QUEUE_MAPPER.get(ttype).get(source)
 
-    tid = rop.get_task_from_queue(queue=ttype)
+    tid = rop.get_task_from_queue(queue=queue)
     if not tid:
         return []
 
     # 获取任务、更新任务状态返回任务实例
     tid = int(tid)
-    if source == "seed":
+    if ttype == "seed":
         obj = CrawlerSeeds.objects.filter(id=tid).first()
     else:
         obj = CrawlerTasks.objects.filter(id=tid).first()
