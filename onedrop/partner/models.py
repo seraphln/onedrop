@@ -45,8 +45,8 @@ class App(models.Model):
         return self.name
 
     class Meta:
-        verbose_name = u"第三方应用管理"
-        verbose_name_plural = u"第三方应用管理"
+        verbose_name = u"第三方应用"
+        verbose_name_plural = u"第三方应用"
 
     def save(self, *args, **kwargs):
         """ 重写save方法，在save时，判断如果没有ak的话，则更新ak和sk """

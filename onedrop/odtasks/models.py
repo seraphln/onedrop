@@ -37,8 +37,8 @@ class CrawlerSeeds(models.Model):
         return self.name
 
     class Meta:
-        verbose_name = u"爬虫种子管理"
-        verbose_name_plural = u"爬虫种子管理"
+        verbose_name = u"爬虫种子"
+        verbose_name_plural = u"爬虫种子"
 
 
 class CrawlerTasks(models.Model):
@@ -86,8 +86,8 @@ class CrawlerTasks(models.Model):
         return True if self.status == "crawling" else False
 
     class Meta:
-        verbose_name = u"数据采集URL管理"
-        verbose_name_plural = u"数据采集URL管理"
+        verbose_name = u"数据采集URL"
+        verbose_name_plural = u"数据采集URL"
 
 
 class CrawlerNodes(models.Model):
@@ -108,5 +108,5 @@ class CrawlerNodes(models.Model):
         return True if self.status == "online" else False
 
     class Meta:
-        verbose_name = u"爬虫节点管理"
-        verbose_name_plural = u"爬虫节点管理"
+        verbose_name = u"爬虫节点"
+        verbose_name_plural = u"爬虫节点"
