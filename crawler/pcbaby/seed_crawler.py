@@ -41,7 +41,6 @@ def msg_handler(seed):
     就直接返回
     """
     if seed is None or seed.get("data", {}).get("seeds") is None:
-        print "No more seed! Going home now!!!"
         return
     else:
         try:

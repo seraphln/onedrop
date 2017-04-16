@@ -14,7 +14,7 @@ from crawler.api_proxy import update_crawler_task
 from crawler.api_proxy import update_crawler_task_by_rest_api
 
 
-def parse_cates(cate, url, html, resp):
+def parse_cates(cate, url, html, resp, source="pcbaby"):
     """
         解析分类以及对应的子分类信息
 
@@ -65,6 +65,7 @@ def parse_cates(cate, url, html, resp):
                           "category": sub_cate_name,
                           "parent_category": cate_name,
                           "url": third_cate_url,
+                          "source": source,
                           "ttype": "leaf"}
                 update_crawler_task(base64.urlsafe_b64encode(json.dumps(params)))
 
@@ -74,7 +75,7 @@ def parse_cates(cate, url, html, resp):
     return result_dict
 
 
-def parse_detail_page(html, task):
+def parse_detail_page(html, task, source="pcbaby"):
     """
         解析详细的html页面，采集正文信息并发送采集结果到远程服务器
         
@@ -120,6 +121,7 @@ def parse_detail_page(html, task):
     task.update({"content": content,
                  "result": result,
                  "page": html,
+                 "source": source,
                  "status": "finished"})
     update_crawler_task_by_rest_api(base64.urlsafe_b64encode(json.dumps(task)))
     return content, result

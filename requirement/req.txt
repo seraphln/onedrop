@@ -12,3 +12,7 @@ gevent
 
 # 后台的页面样式模板
 django-suit
+
+# 定时任务
+django-celery
+celery

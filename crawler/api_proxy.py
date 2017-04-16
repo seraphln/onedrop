@@ -98,7 +98,7 @@ def get_crawler_seed():
 
         :return: {"data": {"tasks": cseeds[0].get("node")}}
     """
-    query_str = ''' query fetchCrawlerSeeds{allCrawlerSeeds {
+    query_str = ''' query fetchCrawlerSeeds{allCrawlerSeeds(source: "pcbaby") {
                         edges {
                             node {
                                 id,
@@ -112,6 +112,7 @@ def get_crawler_seed():
                 '''
     data = request("GET", GRAPHQL_HOST % query_str)
     cseeds = data.get("data", {}).get("allCrawlerSeeds", {}).get("edges", [{}])
+    print cseeds
     if not cseeds or cseeds[0].get("status") == "finished":
         return {}
     else:
@@ -157,7 +158,7 @@ def update_crawler_task_by_rest_api(task_result):
 
         :return: {}
     """
-    url = "%s/update_crawler_task" % API_HOST
+    url = "%s/update_crawler_task/" % API_HOST
     data = {"task_result": task_result}
     return request("POST", url, params=data)
 
@@ -202,7 +203,8 @@ def update_crawler_task(task_result):
 
 
 if __name__ == "__main__":
-    import json
-    import base64
-    task_result = {"name": "%s-%s" % (socket.gethostname(), os.getpid())}
-    print register_crawler_node(base64.urlsafe_b64encode(json.dumps(task_result)))
+    #import json
+    #import base64
+    #task_result = {"name": "%s-%s" % (socket.gethostname(), os.getpid())}
+    #print register_crawler_node(base64.urlsafe_b64encode(json.dumps(task_result)))
+    print get_crawler_seed()

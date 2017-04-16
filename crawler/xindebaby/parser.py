@@ -6,12 +6,17 @@
 pcbaby对应的parser实现
 """
 
+import sys
+from os.path import dirname, join
+sys.path.append(join(dirname(__file__), '../'))
+sys.path.append(join(dirname(__file__), '../../'))
+
 import json
 import base64
 import lxml.etree
 
-from utils import update_crawler_task
-from utils import update_crawler_task_by_rest_api
+from crawler.api_proxy import update_crawler_task
+from crawler.api_proxy import update_crawler_task_by_rest_api
 
 
 def parse_detail_page(html, task):
