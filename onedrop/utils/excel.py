@@ -105,19 +105,40 @@ def process_xindebaby_export(tmp_file, ctasks):
     """ 处理xindebaby的导出任务 """
     for ctask in ctasks:
         result = eval(ctask.result)
+        capability = ""
+        capability_dct = result.get("capability", {})
+        capability += "disable: %s;" % ",".join(capability_dct.get("disable", []))
+        capability += "enable: %s;" % ",".join(capability_dct.get("enable", []))
+
+        doctor_lst = result.get("doctors", [])
+        doctors = ""
+
+        for doctor in doctor_lst:
+            doctors += "avatar: %s, name: %s;" % (doctor.get("avatar", ""), doctor.get("name"))
+
+        expense_lst = result.get("expense", [])
+        expense = ""
+        for cur_expense in expense_lst:
+            expense += "%s;" % ",".join(cur_expense)
+
+        process_lst = result.get("jiandang_process", [])
+        jiandang_process = ""
+        for process in process_lst:
+            jiandang_process += "%s;" % ",".join(process)
+
         value_lst = [ctask.parent_category,
                      ctask.category,
                      ctask.source,
                      ctask.url,
                      ctask.name,
-                     result.get("tags"),
+                     ",".join(result.get("tags")),
                      result.get("desc"),
                      result.get("address"),
                      result.get("avatar"),
-                     result.get("capability"),
-                     result.get("doctors"),
-                     result.get("expense"),
-                     result.get("jiandang_process"),
+                     capability,
+                     doctors,
+                     expense,
+                     jiandang_process,
                      result.get("jiandang_status")]
         tmp_file.write(0, value_lst)
 
