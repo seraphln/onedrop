@@ -172,3 +172,26 @@ SUIT_CONFIG = {"ADMIN_NAME": u"OneDrop数据采集系统后台管理页面",
                         {"app": "djcelery", 'label': u"DjangoCelery任务管理"},
                         {"app": "partner", 'label': u"采集节点权限管理"},
                         {"app": "odtasks", "label": u"数据采集任务管理"})}
+
+# 导出excel需要的配置信息
+EXCEL_DIR = "/tmp/"
+EXPORT_COLUMN = {"pcbaby": [u"父分类",
+                            u"当前分类",
+                            u"来源",
+                            u"url",
+                            u"标题",
+                            u"内容"],
+                 "xindebaby": [u"父分类",
+                               u"当前分类",
+                               u"来源",
+                               u"url",
+                               u"医院名称",
+                               u"医院标签",
+                               u"医院描述信息",
+                               u"医院地址",
+                               u"医院头像",
+                               u"医院服务项目",
+                               u"医生列表",
+                               u"医院费用",
+                               u"建档流程",
+                               u"建档状态"]}

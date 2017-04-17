@@ -119,7 +119,8 @@ def download_page(url, headers=None, timeout=1, proxies=None, not_proxy=False):
             if not_proxy:
                 query_dict.pop("proxies")
             resp = requests.get(**query_dict)
-            if "Unauthorized" in resp.text or "unauthorized" in resp.text:
+            if "Unauthorized" in resp.text or "unauthorized" in resp.text or u"请输入验证码" in resp.text:
+                print "Got an exception in downloading page"
                 remove_proxy(host, port, http_method, proxies)
                 continue
 
@@ -145,6 +146,13 @@ def download_page(url, headers=None, timeout=1, proxies=None, not_proxy=False):
 
 
 cookies = None
+
+
+def generate_proxy(proxies):
+    host, port, http_method = random.choice(proxies)
+    proxy_dict = {http_method.lower(): 'http://%s:%s' % (host, port)}
+
+    return proxy_dict, [host, port, http_method]
 
 
 if __name__ == "__main__":

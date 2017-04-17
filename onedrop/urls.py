@@ -21,9 +21,11 @@ from django.contrib import admin
 from graphene_django.views import GraphQLView
 
 from onedrop.odtasks.views import update_crawler_task
+from onedrop.odtasks.views import export_crawler_tasks
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r"^graphql", GraphQLView.as_view(graphiql=True)),
     url(r"^update_crawler_task/$", update_crawler_task),
+    url(r"^export_tasks/$", export_crawler_tasks),
 ]
