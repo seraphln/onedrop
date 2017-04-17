@@ -1,72 +1,69 @@
 # coding=utf8
 #
 
+"""
+使用selenium采集微信公众号信息的插件
+"""
 
+import sys
+from os.path import dirname, join
+sys.path.append(join(dirname(__file__), '../'))
+sys.path.append(join(dirname(__file__), '../../'))
+
+import json
 import time
-import random
-import argparse
+import base64
 import lxml.etree
 from selenium import webdriver
+from crawler.base_crawler import BaseSeleniumCrawler
 
-from http import get_proxy
-from utils import generate_proxy
+from crawler.api_proxy import get_crawler_task
 
-import pymongo
+from crawler.http import get_proxy
+from crawler.http import generate_proxy
 
-db = pymongo.Connection()['wechat_source']
+from crawler.wechat.parser import parse_user_info
+from crawler.wechat.parser import parse_page_content
+from crawler.wechat.parser import find_correct_element_url
+
+from crawler.api_proxy import update_crawler_task_by_rest_api
 
 proxies = get_proxy()
 meta_info = []
 
 
-def parse_options():
+class WechatSeleniumCrawler(BaseSeleniumCrawler):
+    """ wechat 公众号的采集插件实现 """
+
+    def get_task(self):
+        """ 从远程服务器获取wechat的爬虫种子 """
+        return get_crawler_task(self.source)
+
+
+def msg_handler(task):
     """
-    解析输入
+    检查seed，如果获取到的seed示例有问题的话
+    就直接返回
+    {'data': {'tasks': None}}
     """
-    parser = argparse.ArgumentParser(description='compare market and site number')
-    parser.add_argument('-n', '--name', action='store', dest='name',
-                        help=u'需要搜索的微信公众号名称')
-
-    return parser.parse_args()
-
-
-def parse_cur_source(page_source, cur_id):
-    """ """
-    el = lxml.etree.HTML(page_source)
-    title = el.xpath('//h2[@id="activity-name"]/text()')[0]
-    create_on = el.xpath('//em[@class="rich_media_meta rich_media_meta_text"]/text()')[0]
-    author = el.xpath('//em[@class="rich_media_meta rich_media_meta_text"]/text()')[1]
-    wrap_info = el.xpath('//div[@class="rich_media_thumb_wrp"]')
-    if wrap_info:
-        wrap_el = wrap_info[0]
-        try:
-            wrap_image = wrap_el.xpath('./img/@src')[0]
-        except:
-            wrap_image = wrap_el.xpath('./img/@data-backsrc')[0]
+    if task is None or task.get("data", {}).get("tasks") is None:
+        return False
     else:
-        wrap_image = ""
-    wrap_content = el.xpath('//div[@class="rich_media_content "]')[0]
-    content = ""
-    for cur_p in wrap_content.xpath('./p/text()'):
-        if cur_p:
-            content = content + '\n' + cur_p
-    print content
+        try:
+            task = task.get("data", {}).get("tasks")
+            name = task.get('name')
+            print "开始采集公众号: ", name
 
-    source_info = {'title': title, 'create_on': create_on,
-                   'author': author, 'wrap_image': wrap_image,
-                   'content': content, 'source': 'wechat', 'cur_id': cur_id}
+            result = crawler_by_name(name)
+            update_crawler_task_by_rest_api(base64.urlsafe_b64encode(json.dumps(result)))
+        except:
+            print "Task: %s with Type: %s" % (task, type(task))
 
-    cur_record = db.source_code.find_one({'title': source_info.get('title')})
-    if not cur_record:
-        db.source_code.save(source_info)
-
-    return source_info
+    return True
 
 
 def get_proxy_browser():
-    """
-
-    """
+    """ 获取一个使用代理的浏览器实例 """
     global proxies
     global meta_info
 
@@ -98,11 +95,11 @@ def get_proxy_browser():
             _, meta_info = generate_proxy(proxies)
 
 
-def enter_search_list(browser):
+def enter_search_list(browser, name):
     """ """
     keyword = browser.find_element_by_id('upquery')
     keyword.clear()
-    keyword.send_keys(params.name.decode('utf8'))
+    keyword.send_keys(name)
     btn = browser.find_element_by_class_name('swz2')
     btn.click()
 
@@ -114,51 +111,38 @@ def enter_search_list(browser):
     return browser
 
 
-def main(params):
+def crawler_by_name(name):
     """ """
-    # open the page and enter the search keywords
-    print params.name
     browser = get_proxy_browser()
-    browser = enter_search_list(browser)
+    browser = enter_search_list(browser, name)
 
-    detail_page_window_id = browser.window_handles[1]
+    detail_page_window_id = browser.window_handles[0]
     browser.switch_to_window(detail_page_window_id)
-    content_id = 'sogou_vr_11002601_title_%s'
 
-    # open the content page, and add a new window
+    el = lxml.etree.HTML(browser.page_source)
+    detail_url = find_correct_element_url(name, el, browser.page_source)
+
     try:
-        for i in range(10):
-            for j in range(10):
-                cur_id = content_id % (i * 10 + j)
-                try:
-                    print cur_id
-                    content_btn = browser.find_element_by_id(cur_id)
-                    content_btn.click()
+        browser.get(detail_url)
+        # 保存当前的id
+        detail_page_window_id = browser.window_handles[0]
 
-                    content_page_window_id = browser.window_handles[2]
-                    browser.switch_to_window(content_page_window_id)
-                    parse_cur_source(browser.page_source, cur_id)
-                    browser.close()
-                    time.sleep(random.randint(10, 15))
-                    browser.switch_to_window(detail_page_window_id)
-                except:
-                    params = {'cur_id': cur_id, 'status': 'failed', 'source': 'wechat'}
-                    db.source_code.save(params)
-                    print 'Got an error with id: ', cur_id
-                    continue
+        el = lxml.etree.HTML(browser.page_source) 
+        user_info, content_lst, content_urls = parse_user_info(el, browser.page_source)
 
-            try:
-                more_btn = browser.find_element_by_id('wxmore')
-            except:
-                browser.quit()
+        contents = []
+        for target_url in content_urls:
+            browser.get(target_url)
+            el = lxml.etree.HTML(browser.page_source)
+            result = parse_page_content(el, browser.page_source)
+            contents.append(result)
 
-            more_btn.click()
-        else:
-            browser.quit()
+        result = {"user_info": user_info,
+                  "content_lst": content_lst,
+                  "contents": contents}
     finally:
         browser.quit()
 
 
 if __name__ == '__main__':
-    params = parse_options()
-    main(params)
+    crawler_by_name(u"小道消息")

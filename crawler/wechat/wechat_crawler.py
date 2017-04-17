@@ -45,6 +45,13 @@ search_url = "http://weixin.sogou.com/weixin?type=1&query=%s&ie=utf8&_sug_=y&_su
 DEFAULT_TIMEOUT = 3
 
 
+def update_headers(headers, host, referer):
+    """ 更新header信息 """
+
+    headers.update({"Host": host,
+                    "Referer": referer})
+
+
 def parse_options():
     """
     解析输入
@@ -56,38 +63,40 @@ def parse_options():
     return parser.parse_args()
 
 
-def download_content_list(detail_url, headers, timeout):
+def download_content_list(content_lst, headers, timeout):
     """
-    sample url: http://weixin.sogou.com/gzhjs?openid=oIWsFt86NKeSGd_BQKp1GcDkYpv0&ext=D4y5Z3wUwj5uk6W7Yk9BqC3LAaFqirWHT5QFje14y0dip_leVhZF6qjo9Mm_UUVg&cb=sogou.weixin_gzhcb&page=1&gzhArtKeyWord=&tsn=0&t=1459425446419&_=1459425446169
-
-    其中openid是固定的
-    ext也是固定的
-    cb=sogou.weixin_gzhcb这个也是固定的
-    唯一变化的就是这个t以及_这2个字段，看上去是打开这个页面的时间戳
+        通过给定的content_url来打开具体的url页面，并采集相关信息
     """
-    global start_flag
-    total_records = 0
-    context_lst = []
-    _t = start_flag
-    now = int(time.time() * 1000)
-    url_netloc = urlparse.urlsplit(detail_url)
-    cur_url = 'http://%s/gzhjs?%s' % (url_netloc.netloc, url_netloc.query)
-    params = "cb=sogou.weixin_gzhcb&page=%s&gzhArtKeyWord=&tsn=0&t=%s&_=%s"
-    query_url = cur_url + '&' + params
-
-    for i in range(1, 11):
-        target_url = query_url % (i, now, _t)
+    import ipdb;ipdb.set_trace()
+    for content in content_lst:
+        c = content["app_msg_ext_info"]
+        target_url = c["content_url"]
         print target_url
-        resp = download_page(target_url, headers, timeout=DEFAULT_TIMEOUT)
-        strip_text = resp.text.replace('sogou.weixin_gzhcb(', '')
-        strip_text = strip_text[:len(strip_text)-1]
-        context_lst.extend(json.loads(strip_text).get('items', []))
-        if not total_records:
-            total_records = json.loads(strip_text).get('totalItems', 0)
-        _t = _t + 1
-        time.sleep(2)
+        resp = download_page(target_url, headers, timeout=timeout)
 
-    return context_lst
+    #global start_flag
+    #total_records = 0
+    #context_lst = []
+    #_t = start_flag
+    #now = int(time.time() * 1000)
+    #url_netloc = urlparse.urlsplit(detail_url)
+    #cur_url = 'http://%s/gzhjs?%s' % (url_netloc.netloc, url_netloc.query)
+    #params = "cb=sogou.weixin_gzhcb&page=%s&gzhArtKeyWord=&tsn=0&t=%s&_=%s"
+    #query_url = cur_url + '&' + params
+
+    #for i in range(1, 11):
+    #    target_url = query_url % (i, now, _t)
+    #    print target_url
+    #    resp = download_page(target_url, headers, timeout=DEFAULT_TIMEOUT)
+    #    strip_text = resp.text.replace('sogou.weixin_gzhcb(', '')
+    #    strip_text = strip_text[:len(strip_text)-1]
+    #    context_lst.extend(json.loads(strip_text).get('items', []))
+    #    if not total_records:
+    #        total_records = json.loads(strip_text).get('totalItems', 0)
+    #    _t = _t + 1
+    #    time.sleep(2)
+
+    #return context_lst
 
 
 def main(params):
@@ -127,10 +136,11 @@ def main(params):
         detail_resp = download_page(detail_url, headers, timeout=DEFAULT_TIMEOUT)
         el = lxml.etree.HTML(detail_resp.text)
 
-        import ipdb;ipdb.set_trace()
-        user_info, content_urls = parse_user_info(el)
+        user_info, content_lst = parse_user_info(el, detail_resp.text)
 
-        content_lst = download_content_list(detail_url, headers, timeout=DEFAULT_TIMEOUT)
+        import ipdb;ipdb.set_trace()
+        headers = update_headers(headers, "mp.weixin.com.cn", detail_url)
+        content_lst = download_content_list(content_lst, headers, timeout=DEFAULT_TIMEOUT)
         for cur_content in content_lst:
             data = cur_content.replace('encoding="gbk"', 'encoding="utf-8"')
             data = json.loads(json.dumps(xmltodict.parse(data)))
