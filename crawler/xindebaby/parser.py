@@ -13,7 +13,12 @@ sys.path.append(join(dirname(__file__), '../../'))
 
 import json
 import base64
+import lxml.html
 import lxml.etree
+
+from lxml.html import clean
+
+from crawler.http import download_page
 
 from crawler.api_proxy import update_crawler_task
 from crawler.api_proxy import update_crawler_task_by_rest_api
@@ -45,14 +50,18 @@ def parse_detail_page(html, task):
 
     result["doctors"] = doctor_lst
 
+    ret = download_intro_page(el, base_url)
+    result.update(ret)
+
     result["jiandang_status"] = "\n".join(filter(lambda x: u"要求等照片" not in x,
                                           el.xpath("//div[@id='jiandang_status']/div[@class='content']/p/text()")))
 
     jiandang_process = []
     jiandang_divs = el.xpath("//div[@id='jiandang_process']/table/tbody/tr")
+    jiandang_divs = jiandang_divs or el.xpath("//div[@id='jiandang_process']/table/tr")
     for jiandang_div in jiandang_divs:
         jiandang_process.append((jiandang_div.xpath("./td/span/text()")[0],
-                                 jiandang_div.xpath("./td/text()")))
+                                 jiandang_div.xpath("./td/text()")[0]))
 
     result["jiandang_process"] = jiandang_process
 
@@ -60,9 +69,38 @@ def parse_detail_page(html, task):
     task.update({"content": result,
                  "result": result,
                  "page": html,
+                 "source": "xindebaby",
                  "status": "finished"})
     update_crawler_task_by_rest_api(base64.urlsafe_b64encode(json.dumps(task)))
     return "", result
+
+
+def download_intro_page(el, base_url):
+    """
+        获取页面中的简介信息，如果有详细信息页面，则下载详细信息页面并把内容解析出来
+    """
+    try:
+        intro_div = el.xpath("//div[@id='intro']")[0]
+        intro = intro_div.xpath("./div[@class='content']/p/text()")[0]
+
+        # 获取详细信息url
+        intro_url = intro_div.xpath("//div[@id='intro']/div/p/a/@href")[0]
+        intro_url = base_url + intro_url
+        # 下载详细信息
+        intro_detail_resp = download_page(intro_url)
+
+        # 解析详细信息并把结果返回
+        html = intro_detail_resp.text
+        c = clean.Cleaner(style=True, scripts=True,
+                          page_structure=False, safe_attrs_only=False)
+        intro_detail = c.clean_html(html)
+    except:
+        html = ""
+        intro = ""
+        intro_detail = ""
+
+    return {"desc": intro, "desc_detail": intro_detail, "desc_ori": html}
+
 
 
 def post_xindebaby_hospital_tasks():

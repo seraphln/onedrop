@@ -62,3 +62,5 @@ if __name__ == "__main__":
                                      source="xindebaby")
     xindebaby.start()
     gevent.wait()
+    #task = get_crawler_task("xindebaby")
+    #msg_handler(task)
