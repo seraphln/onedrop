@@ -92,7 +92,7 @@ def remove_proxy(host, port, http_method, proxies):
         proxies = get_proxy(if_force=True)
 
 
-def download_page(url, headers=None, timeout=1, proxies=None, not_proxy=False):
+def download_page(url, headers=None, timeout=1, proxies=None, not_proxy=False, counter=1000):
     ''' 下载页面的具体函数 '''
 
     if not proxies:

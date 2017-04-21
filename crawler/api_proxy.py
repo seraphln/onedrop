@@ -92,13 +92,13 @@ def request(method, url, params=None):
     return resp
 
 
-def get_crawler_seed():
+def get_crawler_seed(source="pcbaby"):
     """
         获取采集的种子
 
         :return: {"data": {"tasks": cseeds[0].get("node")}}
     """
-    query_str = ''' query fetchCrawlerSeeds{allCrawlerSeeds(source: "pcbaby") {
+    query_str = ''' query fetchCrawlerSeeds{allCrawlerSeeds(source: "%s") {
                         edges {
                             node {
                                 id,
@@ -110,6 +110,7 @@ def get_crawler_seed():
                         }
                     }}
                 '''
+    query_str = query_str % source
     data = request("GET", GRAPHQL_HOST % query_str)
     cseeds = data.get("data", {}).get("allCrawlerSeeds", {}).get("edges", [{}])
     print cseeds
