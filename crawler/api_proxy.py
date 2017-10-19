@@ -17,7 +17,7 @@ import traceback
 import config
 
 
-API_HOST = "http://180.76.149.212:8083"
+API_HOST = "http://180.76.149.212:8082"
 GRAPHQL_HOST = "%s/graphql?query=%%s" % API_HOST
 
 
@@ -201,6 +201,15 @@ def update_crawler_task(task_result):
     query_str = query_str % str(task_result)
     url = GRAPHQL_HOST % query_str
     return request("POST", url)
+
+
+def upload_file(content, filename):
+    """ 上传图片 """
+    path = "%s/upload_file/" % API_HOST
+    files = {"file": content}
+    data = {"type": "img", "filename": filename}
+    resp = requests.post(path, files=files, data=data)
+    return json.loads(resp.text)
 
 
 if __name__ == "__main__":

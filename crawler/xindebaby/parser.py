@@ -120,6 +120,50 @@ def post_xindebaby_hospital_tasks():
         print params
 
 
+def parse_page(html, task):
+    """ 解析页面，获取title, keywords, desc """
+
+    el = lxml.etree.HTML(html)
+    result = {}
+    try:
+        result.update({"title": el.xpath("//title/text()")[0]})
+    except:
+        pass
+    try:
+        result.update({"keywords": el.xpath("//meta[@name='keywords']/@content")[0]})
+    except:
+        pass
+    try:
+        result.update({"desc": el.xpath("//meta[@name='description']/@content")[0]})
+    except:
+        pass
+
+    # 将采集到的数据发送到远程服务器
+    task.update({"result": result})
+    #update_crawler_task_by_rest_api(base64.urlsafe_b64encode(json.dumps(task)))
+    return "", task
+
+def post_yjs_tasks():
+    """
+        创建yjs的采集任务
+    """
+    data = map(lambda x: x.strip(), open("dns_records.txt").readlines())
+
+    for url in data:
+        category = "yjs"
+        name = "yjs"
+
+        params = {"name": name,
+                  "category": category,
+                  "url": url,
+                  "ttype": "leaf",
+                  "source": "yjs",
+                  "parent_category": u"yjs"}
+        update_crawler_task(base64.urlsafe_b64encode(json.dumps(params)))
+        print params
+
+
 if __name__ == "__main__":
     #parse_detail_page("")
-    post_xindebaby_hospital_tasks()
+    #post_xindebaby_hospital_tasks()
+    post_yjs_tasks()

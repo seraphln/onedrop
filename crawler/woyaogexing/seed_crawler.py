@@ -22,7 +22,6 @@ from crawler.woyaogexing.parser import parse_cates
 from crawler.api_proxy import get_crawler_seed
 
 
-
 def msg_handler(seed):
     """
         检查seed，如果获取到的seed示例有问题的话，直接返回
@@ -37,15 +36,22 @@ def msg_handler(seed):
 
             if_next = True
             counter = 1
+            counter = 335
+            target_url = "http://www.woyaogexing.com/touxiang/index_335.html"
+
+            # 最多重试5次
+            total_count = 5
             while if_next:
                 print target_url
                 resp = download_page(target_url)
                 if not resp:
                     print "Cannot get current page: %s, Going home now!!!" % target_url
                     time.sleep(5)
+                    total_counter -= 1
                     continue
                 _, if_next = parse_cates(seed.get("name"), url, resp)
 
+                total_counter = 5
                 if if_next:
                     # 添加翻页
                     counter += 1

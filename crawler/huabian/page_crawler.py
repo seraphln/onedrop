@@ -3,12 +3,7 @@
 
 
 """
-太平洋亲子网的爬虫实现
-
-目前将爬虫分为如下几个部分：
-1. 导航栏的采集，包括：怀孕、育儿、营养、生活、用品、生男生女、食谱、用品常识
-2. 二级导航，包括：孕育周刊、母婴检查、疾病防疫、营养饮食、保健护理
-3. 三级导航，包括: 备孕百科及子分类等
+huabian.com的爬虫实现
 """
 
 from gevent import monkey
@@ -21,13 +16,14 @@ sys.path.append(join(dirname(__file__), '../../'))
 
 import gevent
 
+import json
 from crawler.http import download_page
 
 from crawler.base_crawler import BaseCrawler
 
 from crawler.api_proxy import get_crawler_task
 
-from crawler.pcbaby.parser import parse_detail_page
+from crawler.huabian.parser import parse_detail_page
 
 
 class PCBabyTaskCrawler(BaseCrawler):
@@ -50,11 +46,16 @@ def msg_handler(task):
         try:
             task = task.get("data", {}).get("tasks")
             url = task.get('url')
+            if not url.startswith("http:"):
+                url = "http:" + url
             print "Going to crawl url: ", url
             resp = download_page(url, not_proxy=True)
             if not resp:
                 print "Cannot get current page: %s, sleeping now!!!" % url
-            parse_detail_page(resp.text, task)
+            content, task = parse_detail_page(resp.text, task)
+            with open("result.txt", "a+") as fp:
+                task["title"] = task.get("title")
+                fp.write("%s\n" % json.dumps(task))
         except:
             print "Task: %s with Type: %s" % (task, type(task))
 
@@ -62,8 +63,13 @@ def msg_handler(task):
 
 
 if __name__ == "__main__":
-    pcbaby = PCBabyTaskCrawler(callback=msg_handler,
-                               ttype="page",
-                               source="pcbaby")
-    pcbaby.start()
-    gevent.wait()
+    #pcbaby = PCBabyTaskCrawler(callback=msg_handler,
+    #                           ttype="page",
+    #                           source="pcbaby")
+    #pcbaby.start()
+    #gevent.wait()
+    data = json.load(open("seeds.txt"))
+    for cur_task in data:
+        url = cur_task.get("url")
+        seed = {"data": {"tasks": {"url": url, "name": "mingxing", "title": cur_task.get("title")}}}
+        print msg_handler(seed)

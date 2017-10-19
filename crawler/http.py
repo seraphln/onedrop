@@ -92,8 +92,9 @@ def remove_proxy(host, port, http_method, proxies):
         proxies = get_proxy(if_force=True)
 
 
-def download_page(url, headers=None, timeout=1, proxies=None, not_proxy=False, counter=1000):
-    ''' 下载页面的具体函数 '''
+def download_page(url, headers=None, timeout=1,
+                  proxies=None, not_proxy=False, data=None, counter=1000):
+    """ 下载页面的具体函数 """
 
     if not proxies:
         proxies = get_proxy()
@@ -104,7 +105,7 @@ def download_page(url, headers=None, timeout=1, proxies=None, not_proxy=False, c
     global cookies
 
     # 最多执行100次
-    counter = 100
+    counter = min(100, counter)
 
     while 1:
         host, port, http_method = random.choice(proxies)
@@ -113,29 +114,41 @@ def download_page(url, headers=None, timeout=1, proxies=None, not_proxy=False, c
                       'headers': headers,
                       'timeout': timeout,
                       'proxies': proxy_dict}
+
+        if data:
+            query_dict["data"] = data
+
         try:
             if cookies:
                 query_dict['cookies'] = cookies
             if not_proxy:
                 query_dict.pop("proxies")
+
+            if "https" in url:
+                query_dict["verify"] = False
             resp = requests.get(**query_dict)
             if "Unauthorized" in resp.text or "unauthorized" in resp.text or u"请输入验证码" in resp.text:
                 print "Got an exception in downloading page"
+                counter -= 1
+                if not counter:
+                    return ""
                 remove_proxy(host, port, http_method, proxies)
                 continue
 
             if resp.text:
                 _cookie = resp.cookies
+                cookies = resp.cookies
                 break
         except Exception as e:
-            if 'timeout' in str(e):
+            if 'timeout' in str(e) and not_proxy:
                 remove_proxy(host, port, http_method, proxies)
-            elif 'Connection aborted.' in str(e):
+            elif 'Connection aborted.' in str(e) and not_proxy:
                 remove_proxy(host, port, http_method, proxies)
                 time.sleep(3)
             else:
                 counter -= 1
-                remove_proxy(host, port, http_method, proxies)
+                if not not_proxy:
+                    remove_proxy(host, port, http_method, proxies)
                 if counter <= 0:
                     return ""
 
