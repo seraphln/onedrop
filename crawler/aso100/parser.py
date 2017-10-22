@@ -109,5 +109,97 @@ def parse_detail_page(html, task, source="pcbaby"):
     return content, task
 
 
+def process_base_info(el, info_dict):
+    """
+    解析app的基本信息
+
+    @param el: 当前页面的el实例
+    @type el: lxml.etree.HTML
+
+    @param info_dict: 存储基本信息的dict
+    @type info_dict: Dict
+
+    :return:
+    """
+    header_el = el.xpath("//div[@class='appinfo-body']")[0]
+    app_name = header_el.xpath("./h3/text()")[0].strip()
+
+    app_info_el = header_el.xpath("./div[@class='appinfo-info']")[0]
+    app_author = app_info_el.xpath("./div[@class='appinfo-auther']")[0].xpath("./p[@class='content']/text()")[0]
+    app_category = app_info_el.xpath("./div[@class='appinfo-category']")[0].xpath("./p/@title")[0]
+    app_id = app_info_el.xpath("./div[@class='appinfo-auther qrcode-area']/p[@class='content']/a/text()")[0]
+    app_price = app_info_el.xpath("./div[@class='appinfo-auther']")[1].xpath("./p[@class='content']/text()")[0]
+    latest_version = app_info_el.xpath("./div[@class='appinfo-auther']")[2].xpath("./p[@class='content']/text()")[0].strip()
+
+    base_info = info_dict.setdefault("baseinfo", {}).setdefault("info", {})
+    base_info.update({"app_author": app_author,
+                      "app_category": app_category,
+                      "app_id": app_id,
+                      "app_price": app_price,
+                      "latest_version": latest_version})
+
+    screen_el = el.xpath("//div[@id='container']")[0]
+    pics_els = screen_el.xpath("./div[@class='aso100-nav-label screenimg']/a")
+    
+    pic_dict = {}
+    for pic_el in pics_els:
+        key = pic_el.xpath("./text()")[0]
+        pic_images = pic_el.xpath("./@data-imgstr")[0].split(",")
+        pic_dict[key] = pic_images
+
+    # 处理应用截图
+    base_info.update({"pic_dict": pic_dict})
+
+    desc = screen_el.xpath("./div[@class='desc']")[0]
+    desc = lxml.html.tostring(desc)
+    baseinfo_content = screen_el.xpath("./table[@class='base-info base-area']")[0]
+    baseinfo_content = lxml.html.tostring(baseinfo_content)
+
+    # 处理相关产品
+    ralation_apps = screen_el.xpath("./ul[@class='app-list-simple clearfix']/li")
+
+    for app in ralation_apps:
+        app_name = app.xpath("./a/p/text()")[0]
+        app_logo = app.xpath("./a/img/@src")[0]
+
+        app_dict = {"app_name": app_name,
+                    "app_logo": app_logo}
+
+        base_info.setdefault("ralation_apps", []).append(app_dict)
+
+    base_info.update({"desc": desc, "baseinfo_content": baseinfo_content})
+
+
+def process_version_info(el, info_dict):
+    """
+    处理app历史版本信息的采集
+
+    @param el: 当前页面的el实例
+    @type el: lxml.etree.HTML
+
+    @param info_dict: 存储基本信息的dict
+    @type info_dict: Dict
+
+    :return:
+    """
+    version_els = el.xpath("//div[@id='container']/table/tbody/tr")
+
+    for version_el in version_els:
+        version = version_el.xpath("./td")[0].xpath("./text()")[0]
+        update_time = version_el.xpath("./td")[1].xpath("./text()")[0]
+        icon = version_el.xpath("./td")[2].xpath("./img/@src")[0]
+        title = version_el.xpath("./td")[2].xpath("./text()")[0]
+        update_desc = version_el.xpath("./td")[3]
+        update_desc = lxml.html.tostring(update_desc)
+
+        cur_version = {"version": version,
+                       "update_time": update_time,
+                       "icon": icon,
+                       "title": title,
+                       "update_desc": update_desc}
+
+        info_dict.setdefault("version_info", []).append(cur_version)
+
+
 if __name__ == "__main__":
     parse_detail_page("")
