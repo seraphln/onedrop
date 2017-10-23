@@ -6,6 +6,7 @@
 pcbaby对应的parser实现
 """
 
+import re
 import json
 import base64
 import lxml.html
@@ -13,6 +14,9 @@ import lxml.etree
 
 from crawler.api_proxy import update_crawler_task
 from crawler.api_proxy import update_crawler_task_by_rest_api
+
+
+INT_RE = re.compile("\d")
 
 
 def parse_cates(cate, url, html, resp, source="aso100"):
@@ -199,6 +203,80 @@ def process_version_info(el, info_dict):
                        "update_desc": update_desc}
 
         info_dict.setdefault("version_info", []).append(cur_version)
+
+
+def process_compete_info(el, info_dict):
+    """
+    处理竞品页面的智能推荐
+
+    @param el: 当前页面的el实例
+    @type el: lxml.etree.HTML
+
+    @param info_dict: 存储基本信息的dict
+    @type info_dict: Dict
+
+    :return:
+    """
+    compet_els = el.xpath("//div[@id='container']/div[@class='competi-base ']/table/tbody/tr")
+
+    for compet_el in compet_els:
+        seq = compet_el.xpath("./td")[0].xpath("./text()")[0]
+        app_logo = compet_el.xpath("./td")[1].xpath("./a/div[@class='media-left media-middle']/img/@src")[0]
+        app_name = compet_el.xpath("./td")[1].xpath("./a/div[@class='media-body']/h4/text()")[0]
+        app_author = compet_el.xpath("./td")[1].xpath("./a/div[@class='media-body']/div/text()")[0]
+        total_rank = compet_el.xpath("./td")[2].xpath("./div[@class='rank']/text()")[0]
+        pay_type = compet_el.xpath("./td")[2].xpath("./div[@class='brand']/text()")[0]
+        cur_ver_rank = compet_el.xpath("./td[@class='reting mobile-hide']")[0].xpath("./p[@class='num']/text()")[0]
+        total_ver_rank = compet_el.xpath("./td[@class='reting mobile-hide']")[1].xpath("./p[@class='num']/text()")[0]
+
+        cur_version = {"seq": seq,
+                       "app_logo": app_logo,
+                       "app_name": app_name,
+                       "app_author": app_author,
+                       "pay_type": pay_type,
+                       "cur_ver_rank": cur_ver_rank,
+                       "total_ver_rank": total_ver_rank,
+                       "total_rank": total_rank}
+
+        info_dict.setdefault("competi_info", []).append(cur_version)
+
+
+def process_comment_info(el, info_dict):
+    """
+    处理评论统计页面
+
+    @param el: 当前页面的el实例
+    @type el: lxml.etree.HTML
+
+    @param info_dict: 存储基本信息的dict
+    @type info_dict: Dict
+
+    :return:
+    """
+    def _process_static_info(comment_el):
+        """ 处理统计信息的采集 """
+        title = comment_el.xpath("./div[@class='head']/text()")[0]
+        rate = comment_el.xpath("./div[@class='reting-box']/div[@class='reting']/p[@class='num']/text()")[0]
+        star = comment_el.xpath("./div[@class='reting-box']/div[@class='reting']/p[@class='star']/span/@style")[0]
+        star = INT_RE.findall(star)[0]
+
+        comment_count = comment_el.xpath("./div[@class='reting-box']/div[@class='reting']/p[@class='all']/text()")[0]
+
+        rate_range = {}
+        range_els = comment_el.xpath("./div[@class='reting-box']/ul[@class='rating-info']/li")
+        for range_el in range_els:
+            name = range_el.xpath("./span[@class='name']/text()")[0]
+            counter = range_el.xpath("./span")[2].xpath("./text()")[0]
+
+            rate_range[name] = counter
+
+        d = {"title": title,
+             "rate": rate,
+             "star": star,
+             "comment_count": comment_count,
+             "rate_range": rate_range}
+
+        return title, d
 
 
 if __name__ == "__main__":
