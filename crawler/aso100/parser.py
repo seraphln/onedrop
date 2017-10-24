@@ -87,35 +87,12 @@ def parse_cates(cate, url, html, resp, source="aso100"):
     return result_dict
 
 
-def parse_detail_page(html, task, source="pcbaby"):
-    """
-        解析详细的html页面，采集正文信息并发送采集结果到远程服务器
-        
-        @param html: 需要解析的html页面
-        @type html: String
-
-        @param task: 从API服务器拿到的Task Dict
-        @type task: Dict
-
-        :return: (content, result)
-    """
-    el = lxml.etree.HTML(html)
-
-    content_el = el.xpath("//div[@class='hb_content']")[0]
-    content = lxml.html.tostring(content_el)
-
-    # 将采集到的数据发送到远程服务器
-    task.update({"content": content,
-                 "page": html,
-                 "source": source,
-                 "status": "finished"})
-    #update_crawler_task_by_rest_api(base64.urlsafe_b64encode(json.dumps(task)))
-    return content, task
-
-
-def process_base_info(el, info_dict):
+def process_base_info(browser, el, info_dict):
     """
     解析app的基本信息
+
+    @param browser: 当前selenium的浏览器实例
+    @type browser: webdriver.Firefox()
 
     @param el: 当前页面的el实例
     @type el: lxml.etree.HTML
@@ -174,9 +151,12 @@ def process_base_info(el, info_dict):
     base_info.update({"desc": desc, "baseinfo_content": baseinfo_content})
 
 
-def process_version_info(el, info_dict):
+def process_version_info(browser, el, info_dict):
     """
     处理app历史版本信息的采集
+
+    @param browser: 当前selenium的浏览器实例
+    @type browser: webdriver.Firefox()
 
     @param el: 当前页面的el实例
     @type el: lxml.etree.HTML
@@ -205,9 +185,12 @@ def process_version_info(el, info_dict):
         info_dict.setdefault("version_info", []).append(cur_version)
 
 
-def process_compete_info(el, info_dict):
+def process_compete_info(browser, el, info_dict):
     """
     处理竞品页面的智能推荐
+
+    @param browser: 当前selenium的浏览器实例
+    @type browser: webdriver.Firefox()
 
     @param el: 当前页面的el实例
     @type el: lxml.etree.HTML
@@ -241,9 +224,12 @@ def process_compete_info(el, info_dict):
         info_dict.setdefault("competi_info", []).append(cur_version)
 
 
-def process_comment_info(el, info_dict):
+def process_comment_info(browser, el, info_dict):
     """
     处理评论统计页面
+
+    @param browser: 当前selenium的浏览器实例
+    @type browser: webdriver.Firefox()
 
     @param el: 当前页面的el实例
     @type el: lxml.etree.HTML
@@ -277,6 +263,27 @@ def process_comment_info(el, info_dict):
              "rate_range": rate_range}
 
         return title, d
+
+
+def process_aso_compare_info(browser, el, info_dict):
+    """
+    处理aso排名相关页面
+
+    @param browser: 当前selenium的浏览器实例
+    @type browser: webdriver.Firefox()
+
+    @param el: 当前页面的el实例
+    @type el: lxml.etree.HTML
+
+    @param info_dict: 存储基本信息的dict
+    @type info_dict: Dict
+
+    :return:
+    """
+    import ipdb;ipdb.set_trace()
+    btn = browser.find_element_by_class('btn btn-custom export-data')
+    btn.click()
+
 
 
 if __name__ == "__main__":

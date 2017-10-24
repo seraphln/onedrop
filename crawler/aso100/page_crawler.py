@@ -28,6 +28,7 @@ from crawler.aso100.parser import process_base_info
 from crawler.aso100.parser import process_version_info
 from crawler.aso100.parser import process_compete_info
 from crawler.aso100.parser import process_comment_info
+from crawler.aso100.parser import process_aso_compare_info
 
 from crawler.aso100.seed_crawler import get_proxy_browser
 
@@ -52,19 +53,28 @@ def crawler_page(appid):
     #browser = get_proxy_browser()
 
     base_url = "https://aso100.com/app/%s/appid/1044283059/country/cn"
-    browser = webdriver.Firefox()
+    #browser = webdriver.Firefox()
+
+    profile = webdriver.FirefoxProfile()
+    profile.set_preference("browser.download.panel.shown", False)
+    profile.set_preference("browser.helperApps.neverAsk.openFile","text/csv,application/vnd.ms-excel")
+    profile.set_preference("browser.helperApps.neverAsk.saveToDisk", "text/csv,application/vnd.ms-excel")
+    profile.set_preference("browser.download.folderList", 2);
+    profile.set_preference("browser.download.dir", "/tmp/")
+    profile.set_preference("dom.webnotifications.enabled", False)
+    profile.update_preferences()
+    browser = webdriver.Firefox(profile)
 
     keyword_mapper = {#"baseinfo": process_base_info,               # 基本信息
                       #"version": process_version_info,             # 版本信息
                       #"rank": process_rank_info,                   # 实时排名
                       #"globalRank": process_global_rank_info,      # 全球统一排名
-                      #"keyword": process_keyword_info,             # 关键词明细
                       #"rankMonitor": process_rank_monitor_info,    # 关键词监控
                       #"keywordGuide": process_keyword_guide,       # 关键词优化工具
                       #"competi": process_compete_info,             # 竞品概况
                       #"rankCompare": process_rank_compare_info,    # 排名对比
-                      #"asoCompare": process_aso_compare_info,      # ASO对比
-                      "comment": process_comment_info,             # 评论统计
+                      "keyword": process_aso_compare_info,          # ASO对比
+                      #"comment": process_comment_info,             # 评论统计
                       #"commentList": process_comment_list_info,    # 评论详情
             }
 
@@ -72,8 +82,9 @@ def crawler_page(appid):
     for keyword, task in keyword_mapper.iteritems():
         url = base_url % keyword
         browser.get(url)
+        import ipdb;ipdb.set_trace()
         el = lxml.etree.HTML(browser.page_source)
-        task(el, info_dict)
+        task(browser, el, info_dict)
         print info_dict
 
     return info_dict
