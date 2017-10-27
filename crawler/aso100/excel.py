@@ -11,12 +11,12 @@ import xlrd
 
 def extract_keywords_xlsx(appname, fname):
     """
-        解析给定的excel文件
+    解析给定的excel文件
 
-        @param fname: 给定的excel文件的文件名
-        @type fname: String
+    @param fname: 给定的excel文件的文件名
+    @type fname: String
 
-        :return:
+    :return:
     """
     workbook = xlrd.open_workbook(fname)
     sheet_name = u"%s_关键词覆盖数据" % appname
@@ -37,6 +37,17 @@ def extract_keywords_xlsx(appname, fname):
         row_data.append(l)
 
     return row_data
+
+
+def extract_comment_xlsx(appname, fname):
+    """
+    解析评论详情的excel文件
+
+    @param fname: 给定的excel文件的文件名
+    @type fname: String
+
+    :return:
+    """
 
 
 if __name__ == "__main__":

@@ -283,7 +283,6 @@ def process_aso_compare_info(browser, el, info_dict):
 
     :return:
     """
-    import ipdb;ipdb.set_trace()
     url = el.xpath("//a[@class='btn btn-custom export-data']/@href")[0]
     url = BASE_URL + url
 
@@ -291,6 +290,34 @@ def process_aso_compare_info(browser, el, info_dict):
     app_name = info_dict.get("baseinfo", {}).get("app_name")
 
     fname = generate_fname(app_name)
+    keywords = extract_keywords_xlsx(app_name, fname)
+
+    info_dict.setdefault("aso", {}).update({"keywords": keywords})
+
+
+def process_comment_list_info(browser, el, info_dict):
+    """
+    处理评论详情页面
+
+    @param browser: 当前selenium的浏览器实例
+    @type browser: webdriver.Firefox()
+
+    @param el: 当前页面的el实例
+    @type el: lxml.etree.HTML
+
+    @param info_dict: 存储基本信息的dict
+    @type info_dict: Dict
+
+    :return:
+    """
+    import ipdb;ipdb.set_trace()
+    url = el.xpath("//a[@class='btn btn-custom export-data']/@href")[0]
+    url = BASE_URL + url
+
+    browser.get(url)
+    app_name = info_dict.get("baseinfo", {}).get("app_name")
+
+    fname = generate_fname(app_name, "comment")
     keywords = extract_keywords_xlsx(app_name, fname)
 
     info_dict.setdefault("aso", {}).update({"keywords": keywords})
