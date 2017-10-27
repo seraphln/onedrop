@@ -54,16 +54,14 @@ def crawler_page(appid):
 
     base_url = "https://aso100.com/app/%s/appid/1044283059/country/cn"
     #browser = webdriver.Firefox()
+    options = webdriver.ChromeOptions()
+    options.add_experimental_option("prefs", {
+        "download.default_directory": "/tmp/",
+        "download.prompt_for_download": False,
+        "download.directory_upgrade": True,
+        "safebrowsing.enabled": True})
 
-    profile = webdriver.FirefoxProfile()
-    profile.set_preference("browser.download.panel.shown", False)
-    profile.set_preference("browser.helperApps.neverAsk.openFile","text/csv,application/vnd.ms-excel")
-    profile.set_preference("browser.helperApps.neverAsk.saveToDisk", "text/csv,application/vnd.ms-excel")
-    profile.set_preference("browser.download.folderList", 2);
-    profile.set_preference("browser.download.dir", "/tmp/")
-    profile.set_preference("dom.webnotifications.enabled", False)
-    profile.update_preferences()
-    browser = webdriver.Firefox(profile)
+    browser = webdriver.Chrome(chrome_options=options)
 
     keyword_mapper = {#"baseinfo": process_base_info,               # 基本信息
                       #"version": process_version_info,             # 版本信息
