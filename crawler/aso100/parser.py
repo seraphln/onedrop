@@ -7,16 +7,18 @@ pcbaby对应的parser实现
 """
 
 import re
-import json
-import base64
 import lxml.html
 import lxml.etree
+
+from crawler.aso100.utils import generate_fname
+from crawler.aso100.excel import extract_keywords_xlsx
 
 from crawler.api_proxy import update_crawler_task
 from crawler.api_proxy import update_crawler_task_by_rest_api
 
 
 INT_RE = re.compile("\d")
+BASE_URL = "http://aso100.com"
 
 
 def parse_cates(cate, url, html, resp, source="aso100"):
@@ -117,6 +119,7 @@ def process_base_info(browser, el, info_dict):
                       "app_category": app_category,
                       "app_id": app_id,
                       "app_price": app_price,
+                      "app_name": app_name,
                       "latest_version": latest_version})
 
     screen_el = el.xpath("//div[@id='container']")[0]
@@ -281,10 +284,17 @@ def process_aso_compare_info(browser, el, info_dict):
     :return:
     """
     import ipdb;ipdb.set_trace()
-    btn = browser.find_element_by_class('btn btn-custom export-data')
-    btn.click()
+    url = el.xpath("//a[@class='btn btn-custom export-data']/@href")[0]
+    url = BASE_URL + url
 
+    browser.get(url)
+    app_name = info_dict.get("baseinfo", {}).get("app_name")
+
+    fname = generate_fname(app_name)
+    keywords = extract_keywords_xlsx(app_name, fname)
+
+    info_dict.setdefault("aso", {}).update({"keywords": keywords})
 
 
 if __name__ == "__main__":
-    parse_detail_page("")
+    parse_cates("")
