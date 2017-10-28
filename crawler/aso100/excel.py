@@ -20,7 +20,6 @@ def extract_keywords_xlsx(appname, fname):
     """
     workbook = xlrd.open_workbook(fname)
     sheet_name = u"%s_关键词覆盖数据" % appname
-    print sheet_name
     booksheet = workbook.sheet_by_name(sheet_name)
 
     row_data = []
@@ -48,6 +47,24 @@ def extract_comment_xlsx(appname, fname):
 
     :return:
     """
+    workbook = xlrd.open_workbook(fname)
+    sheet_name = appname
+    booksheet = workbook.sheet_by_index(0)
+
+    row_data = []
+    # 第一行开始是关键词数据
+    for row in range(3, booksheet.nrows):
+
+        date = booksheet.cell(row, 1).value
+        author = booksheet.cell(row, 2).value
+        value = booksheet.cell(row, 3).value
+        title = booksheet.cell(row, 4).value
+        content = booksheet.cell(row, 5).value
+
+        l = [date, author, value, title, content]
+        row_data.append(l)
+
+    return row_data
 
 
 if __name__ == "__main__":

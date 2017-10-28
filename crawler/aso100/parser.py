@@ -6,18 +6,23 @@
 pcbaby对应的parser实现
 """
 
+import os
 import re
+import json
+import time
 import lxml.html
 import lxml.etree
 
 from crawler.aso100.utils import generate_fname
+from crawler.aso100.excel import extract_comment_xlsx
 from crawler.aso100.excel import extract_keywords_xlsx
 
 from crawler.api_proxy import update_crawler_task
 from crawler.api_proxy import update_crawler_task_by_rest_api
 
 
-INT_RE = re.compile("\d")
+INT_RE = re.compile("\d+")
+API_RE = re.compile("{[\S\s]+}")
 BASE_URL = "http://aso100.com"
 
 
@@ -73,7 +78,10 @@ def parse_cates(cate, url, html, resp, source="aso100"):
                         rank = ""
                         ranking_changes = 0
 
+            appid = url.split("/")[-3]
+
             params = {"url": url,
+                      "appid": appid,
                       "logo": logo,
                       "seq": seq,
                       "name": name,
@@ -114,7 +122,7 @@ def process_base_info(browser, el, info_dict):
     app_price = app_info_el.xpath("./div[@class='appinfo-auther']")[1].xpath("./p[@class='content']/text()")[0]
     latest_version = app_info_el.xpath("./div[@class='appinfo-auther']")[2].xpath("./p[@class='content']/text()")[0].strip()
 
-    base_info = info_dict.setdefault("baseinfo", {}).setdefault("info", {})
+    base_info = info_dict.setdefault("baseinfo", {})
     base_info.update({"app_author": app_author,
                       "app_category": app_category,
                       "app_id": app_id,
@@ -172,20 +180,28 @@ def process_version_info(browser, el, info_dict):
     version_els = el.xpath("//div[@id='container']/table/tbody/tr")
 
     for version_el in version_els:
-        version = version_el.xpath("./td")[0].xpath("./text()")[0]
-        update_time = version_el.xpath("./td")[1].xpath("./text()")[0]
-        icon = version_el.xpath("./td")[2].xpath("./img/@src")[0]
-        title = version_el.xpath("./td")[2].xpath("./text()")[0]
-        update_desc = version_el.xpath("./td")[3]
-        update_desc = lxml.html.tostring(update_desc)
+        try:
+            version = version_el.xpath("./td")[0].xpath("./text()")[0]
+            update_time = version_el.xpath("./td")[1].xpath("./text()")[0]
+            try:
+                icon = version_el.xpath("./td")[2].xpath("./img/@src")[0]
+            except:
+                icon = ""
+            title = version_el.xpath("./td")[2].xpath("./text()")[0]
+            update_desc = version_el.xpath("./td")[3]
+            update_desc = lxml.html.tostring(update_desc)
 
-        cur_version = {"version": version,
-                       "update_time": update_time,
-                       "icon": icon,
-                       "title": title,
-                       "update_desc": update_desc}
+            cur_version = {"version": version,
+                           "update_time": update_time,
+                           "icon": icon,
+                           "title": title,
+                           "update_desc": update_desc}
 
-        info_dict.setdefault("version_info", []).append(cur_version)
+            info_dict.setdefault("version_info", []).append(cur_version)
+        except Exception as msg:
+            print str(msg)
+            import ipdb;ipdb.set_trace()
+            print "foo"
 
 
 def process_compete_info(browser, el, info_dict):
@@ -206,25 +222,36 @@ def process_compete_info(browser, el, info_dict):
     compet_els = el.xpath("//div[@id='container']/div[@class='competi-base ']/table/tbody/tr")
 
     for compet_el in compet_els:
-        seq = compet_el.xpath("./td")[0].xpath("./text()")[0]
-        app_logo = compet_el.xpath("./td")[1].xpath("./a/div[@class='media-left media-middle']/img/@src")[0]
-        app_name = compet_el.xpath("./td")[1].xpath("./a/div[@class='media-body']/h4/text()")[0]
-        app_author = compet_el.xpath("./td")[1].xpath("./a/div[@class='media-body']/div/text()")[0]
-        total_rank = compet_el.xpath("./td")[2].xpath("./div[@class='rank']/text()")[0]
-        pay_type = compet_el.xpath("./td")[2].xpath("./div[@class='brand']/text()")[0]
-        cur_ver_rank = compet_el.xpath("./td[@class='reting mobile-hide']")[0].xpath("./p[@class='num']/text()")[0]
-        total_ver_rank = compet_el.xpath("./td[@class='reting mobile-hide']")[1].xpath("./p[@class='num']/text()")[0]
+        try:
+            seq = compet_el.xpath("./td")[0].xpath("./text()")[0]
+            app_logo = compet_el.xpath("./td")[1].xpath("./a/div[@class='media-left media-middle']/img/@src")[0]
+            app_name = compet_el.xpath("./td")[1].xpath("./a/div[@class='media-body']/h4/text()")[0]
+            app_author = compet_el.xpath("./td")[1].xpath("./a/div[@class='media-body']/div/text()")[0]
+            try:
+                total_rank = compet_el.xpath("./td")[2].xpath("./div[@class='rank']/text()")[0]
+            except:
+                total_rank = ""
+            try:
+                pay_type = compet_el.xpath("./td")[2].xpath("./div[@class='brand']/text()")[0]
+            except:
+                pay_type = ""
+            cur_ver_rank = compet_el.xpath("./td[@class='reting mobile-hide']")[0].xpath("./p[@class='num']/text()")[0]
+            total_ver_rank = compet_el.xpath("./td[@class='reting mobile-hide']")[1].xpath("./p[@class='num']/text()")[0]
 
-        cur_version = {"seq": seq,
-                       "app_logo": app_logo,
-                       "app_name": app_name,
-                       "app_author": app_author,
-                       "pay_type": pay_type,
-                       "cur_ver_rank": cur_ver_rank,
-                       "total_ver_rank": total_ver_rank,
-                       "total_rank": total_rank}
+            cur_version = {"seq": seq,
+                           "app_logo": app_logo,
+                           "app_name": app_name,
+                           "app_author": app_author,
+                           "pay_type": pay_type,
+                           "cur_ver_rank": cur_ver_rank,
+                           "total_ver_rank": total_ver_rank,
+                           "total_rank": total_rank}
 
-        info_dict.setdefault("competi_info", []).append(cur_version)
+            info_dict.setdefault("competi_info", []).append(cur_version)
+        except Exception as msg:
+            print str(msg)
+            import ipdb;ipdb.set_trace()
+            print "foo"
 
 
 def process_comment_info(browser, el, info_dict):
@@ -267,6 +294,28 @@ def process_comment_info(browser, el, info_dict):
 
         return title, d
 
+    comment_els = el.xpath("//div[@class='row comment-info']/div")
+
+    comment = info_dict.setdefault("comment", {}).setdefault("statistic", {})
+
+    for comment_el in comment_els:
+        title, static_info = _process_static_info(comment_el)
+        comment[title] = static_info
+
+    data_url = "https://aso100.com/app/commentInfoMore/appid/%s/country/cn"
+    appid = info_dict.get("baseinfo", {}).get("appid") or "724295527"
+    data_url = data_url % appid
+
+    browser.get(data_url)
+    api_data = json.loads(API_RE.findall(browser.page_source)[0])
+
+    data = api_data.get("data", {})
+    title = data.get("title")
+    data_list = data.get("list", [])    
+
+    comment_dict = info_dict.setdefault("comment", {})
+    comment_dict.update({"title": title, "data": data_list})
+
 
 def process_aso_compare_info(browser, el, info_dict):
     """
@@ -283,16 +332,29 @@ def process_aso_compare_info(browser, el, info_dict):
 
     :return:
     """
-    url = el.xpath("//a[@class='btn btn-custom export-data']/@href")[0]
-    url = BASE_URL + url
+    keywords = []
+    try:
+        trs = el.xpath("//div[@id='sort_wrapper']/table/tbody/tr")
 
-    browser.get(url)
-    app_name = info_dict.get("baseinfo", {}).get("app_name")
+        for tr in trs:
+            keyword = tr.xpath("./td[@class=' sort-word']/a/text()")[0]
+            rank = int(tr.xpath("./td[@class=' sort-rank']")[0].xpath("./text()")[0])
+            rank_change = tr.xpath("./td[@class=' sort-rank']")[1].xpath("./div/span/text()")[0]
+            figure = int(tr.xpath("./td[@class=' sort-nums']/a/text()")[0])
+            results = int(tr.xpath("./td[@class=' sort-index']/a/text()")[0])
 
-    fname = generate_fname(app_name)
-    keywords = extract_keywords_xlsx(app_name, fname)
+            cur_word = {"keyword": keyword,
+                        "rank": rank,
+                        "rank_change": rank_change,
+                        "figure": figure,
+                        "results": results}
+            keywords.append(cur_word)
 
-    info_dict.setdefault("aso", {}).update({"keywords": keywords})
+        info_dict.setdefault("aso", {}).update({"keywords": keywords})
+    except Exception as msg:
+        print str(msg)
+        import ipdb;ipdb.set_trace()
+        print "foo"
 
 
 def process_comment_list_info(browser, el, info_dict):
@@ -310,17 +372,32 @@ def process_comment_list_info(browser, el, info_dict):
 
     :return:
     """
-    import ipdb;ipdb.set_trace()
-    url = el.xpath("//a[@class='btn btn-custom export-data']/@href")[0]
-    url = BASE_URL + url
+    comments = []
+    try:
+        trs = el.xpath("//div[@class='comment']/table/tbody/tr")
 
-    browser.get(url)
-    app_name = info_dict.get("baseinfo", {}).get("app_name")
+        for tr in trs:
+            rank = tr.xpath("./td[@class='reting']/p")[0].xpath("./span/@style")[0]
+            rank = INT_RE.findall(rank)[0]
 
-    fname = generate_fname(app_name, "comment")
-    keywords = extract_keywords_xlsx(app_name, fname)
+            title = tr.xpath("./td")[1].xpath("./p")[0].xpath("./strong/text()")[0]
+            author = tr.xpath("./td")[1].xpath("./p")[0].xpath("./a/text()")[0]
+            content = tr.xpath("./td")[1].xpath("./div/text()")[0]
+            comment_date = tr.xpath("./td")[2].xpath("./text()")[0]
 
-    info_dict.setdefault("aso", {}).update({"keywords": keywords})
+            cur_comment = {"rank": rank,
+                           "title": title,
+                           "author": author,
+                           "content": content,
+                           "comment_date": comment_date}
+
+            comments.append(cur_comment)
+
+        info_dict.setdefault("comment_lst", {}).update({"comments": comments})
+    except Exception as msg:
+        print str(msg)
+        import ipdb;ipdb.set_trace()
+        print "foo"
 
 
 if __name__ == "__main__":
