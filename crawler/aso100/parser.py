@@ -235,8 +235,14 @@ def process_compete_info(browser, el, info_dict):
                 pay_type = compet_el.xpath("./td")[2].xpath("./div[@class='brand']/text()")[0]
             except:
                 pay_type = ""
-            cur_ver_rank = compet_el.xpath("./td[@class='reting mobile-hide']")[0].xpath("./p[@class='num']/text()")[0]
-            total_ver_rank = compet_el.xpath("./td[@class='reting mobile-hide']")[1].xpath("./p[@class='num']/text()")[0]
+            try:
+                cur_ver_rank = compet_el.xpath("./td[@class='reting mobile-hide']")[0].xpath("./p[@class='num']/text()")[0]
+            except:
+                cur_ver_rank = 0
+            try:
+                total_ver_rank = compet_el.xpath("./td[@class='reting mobile-hide']")[1].xpath("./p[@class='num']/text()")[0]
+            except:
+                total_ver_rank = 0
 
             cur_version = {"seq": seq,
                            "app_logo": app_logo,

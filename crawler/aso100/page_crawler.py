@@ -96,19 +96,18 @@ def crawl_cur_page(appid, browser, cur_task):
     browser.get(url)
     time.sleep(random.randint(7, 13))
 
-    keyword_tasks = [#("baseinfo", process_base_info),               # 基本信息
-                     #("version", process_version_info),             # 版本信息
-                     #("competi", process_compete_info),             # 竞品概况
-                     #("keyword", process_aso_compare_info),         # ASO对比
+    keyword_tasks = [("baseinfo", process_base_info),               # 基本信息
+                     ("version", process_version_info),             # 版本信息
+                     ("competi", process_compete_info),             # 竞品概况
+                     ("keyword", process_aso_compare_info),         # ASO对比
                      ("comment", process_comment_info),             # 评论统计
-                     #("commentList", process_comment_list_info),    # 评论详情
+                     ("commentList", process_comment_list_info),    # 评论详情
             ]
 
     info_dict = {}
     for keyword, task in keyword_tasks:
         url = base_url % (keyword, appid)
         browser.get(url)
-        import ipdb;ipdb.set_trace()
         el = lxml.etree.HTML(browser.page_source)
         task(browser, el, info_dict)
         time.sleep(random.randint(7, 15))
@@ -139,20 +138,30 @@ def crawler_page():
     browser = get_browser()
 
     task = random.choice(tasks)
-    while task:
-        try:
+
+    try:
+        while task is not None:
+            print(task)
             appid = task["appid"]
             print("Now are going to crawl task: %s" % appid)
             crawl_cur_page(appid, browser, task)
             tasks.remove(task)
+            print("After finished crawling task: %s" % json.dumps(task))
 
             try:
                 task = random.choice(tasks)
-            except:
+            except Exception as msg:
+                print("Cannot get new task")
+                print str(msg)
                 task = None
-        finally:
-            browser.quit()
-            return None
+
+            print("Here are new task: %s" % json.dumps(task))
+    except Exception as msg:
+        print("Got an error with crawl data")
+        print str(msg)
+    finally:
+        browser.quit()
+        return None
 
 
 if __name__ == "__main__":

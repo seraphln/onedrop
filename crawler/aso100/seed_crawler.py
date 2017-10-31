@@ -70,10 +70,13 @@ def crawl_tasks():
     try:
         login_user(browser)
 
+        base_url = "https://aso100.com"
+        browser.get(base_url)
+        time.sleep(random.randint(3, 7))
+
         print("After login, now load the rank page")
         url = "https://aso100.com/rank"
         browser.get(url)
-        page_source = browser.page_source
 
         while 1:
             print("After loading the rank page, now we need find the more btn and click it")
@@ -86,8 +89,12 @@ def crawl_tasks():
 
             time.sleep(random.randint(10, 17))
             # 有查找下一步的按钮，那么就继续按
-            more_btn.click()
+            try:
+                more_btn.click()
+            except:
+                break
 
+        page_source = browser.page_source
         print("After click all the more btn, finally we use lxml to parse the page and close the browser")
         tasks = parse_cates("aso100", url, page_source, None)
 
