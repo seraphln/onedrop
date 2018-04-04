@@ -29,3 +29,6 @@ supervisor
 celery==3.1
 django-celery
 django-celery-results
+
+# 虚拟显示
+pyvirtualdisplay

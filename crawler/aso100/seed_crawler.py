@@ -23,6 +23,11 @@ from crawler.aso100.parser import parse_cates
 from crawler.aso100.utils import login_user
 from crawler.aso100.utils import get_browser
 
+import pyvirtualdisplay
+
+display = pyvirtualdisplay.Display(visible=False, size=(800,600))
+display.start()
+
 proxies = get_proxy()
 meta_info = []
 

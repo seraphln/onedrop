@@ -92,7 +92,7 @@ def remove_proxy(host, port, http_method, proxies):
         proxies = get_proxy(if_force=True)
 
 
-def download_page(url, headers=None, timeout=1,
+def download_page(url, headers=None, timeout=1, http_method="GET",
                   proxies=None, not_proxy=False, data=None, counter=1000):
     """ 下载页面的具体函数 """
 
@@ -126,8 +126,12 @@ def download_page(url, headers=None, timeout=1,
 
             if "https" in url:
                 query_dict["verify"] = False
-            resp = requests.get(**query_dict)
-            if "Unauthorized" in resp.text or "unauthorized" in resp.text or u"请输入验证码" in resp.text:
+            if http_method == "POST":
+                resp = requests.post(**query_dict)
+            else:
+                resp = requests.get(**query_dict)
+            #if "Unauthorized" in resp.text or "unauthorized" in resp.text or u"请输入验证码" in resp.text:
+            if u"请输入验证码" in resp.text:
                 print "Got an exception in downloading page"
                 counter -= 1
                 if not counter:

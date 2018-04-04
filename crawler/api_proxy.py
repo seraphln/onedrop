@@ -17,7 +17,8 @@ import traceback
 import config
 
 
-API_HOST = "http://180.76.149.212:8082"
+#API_HOST = "http://180.76.149.212:8082"
+API_HOST = "http://39.107.32.143:8082"
 GRAPHQL_HOST = "%s/graphql?query=%%s" % API_HOST
 
 

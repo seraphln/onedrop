@@ -10,6 +10,7 @@ import os
 import re
 import json
 import time
+import base64
 import lxml.html
 import lxml.etree
 
@@ -87,11 +88,13 @@ def parse_cates(cate, url, html, resp, source="aso100"):
                       "name": name,
                       "company": company,
                       "rank": rank,
+                      "category": "aso100",
+                      "source": "aso100",
                       "ranking_changes": ranking_changes,
                       "ttype": "leaf"}
 
-            #update_crawler_task(base64.urlsafe_b64encode(json.dumps(params)))
             result_dict.setdefault(cate, []).append(params)
+            update_crawler_task(base64.urlsafe_b64encode(json.dumps(params)))
         except Exception as msg:
             print str(msg)
     return result_dict
@@ -200,7 +203,6 @@ def process_version_info(browser, el, info_dict):
             info_dict.setdefault("version_info", []).append(cur_version)
         except Exception as msg:
             print str(msg)
-            import ipdb;ipdb.set_trace()
             print "foo"
 
 
@@ -256,7 +258,6 @@ def process_compete_info(browser, el, info_dict):
             info_dict.setdefault("competi_info", []).append(cur_version)
         except Exception as msg:
             print str(msg)
-            import ipdb;ipdb.set_trace()
             print "foo"
 
 
@@ -359,8 +360,6 @@ def process_aso_compare_info(browser, el, info_dict):
         info_dict.setdefault("aso", {}).update({"keywords": keywords})
     except Exception as msg:
         print str(msg)
-        import ipdb;ipdb.set_trace()
-        print "foo"
 
 
 def process_comment_list_info(browser, el, info_dict):
@@ -402,8 +401,6 @@ def process_comment_list_info(browser, el, info_dict):
         info_dict.setdefault("comment_lst", {}).update({"comments": comments})
     except Exception as msg:
         print str(msg)
-        import ipdb;ipdb.set_trace()
-        print "foo"
 
 
 if __name__ == "__main__":
